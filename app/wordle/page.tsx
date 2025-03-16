@@ -1,73 +1,139 @@
 'use client';
 import React, { useState } from 'react';
+import clsx from 'clsx';
 
 const WORD_LENGTH = 5;
 const MAX_ATTEMPTS = 6;
-const TARGET_WORD = 'CRANE'; // You can randomize this later or fetch from an API
+const TARGET_WORD = 'CRANE'; // Static word for now (uppercase)
+
+const KEYS = 'QWERTYUIOPASDFGHJKLZXCVBNM'.split('');
 
 const WordlePage: React.FC = () => {
   const [guesses, setGuesses] = useState<string[]>([]);
   const [currentGuess, setCurrentGuess] = useState<string>('');
   const [gameStatus, setGameStatus] = useState<'playing' | 'won' | 'lost'>('playing');
+  const [usedLetters, setUsedLetters] = useState<{ [key: string]: string }>({});
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.value.length <= WORD_LENGTH) {
-      setCurrentGuess(e.target.value.toUpperCase());
+  const handleKeyPress = (key: string) => {
+    if (gameStatus !== 'playing') return;
+
+    if (key === 'Enter') {
+      if (currentGuess.length === WORD_LENGTH) {
+        submitGuess();
+      }
+    } else if (key === 'Backspace') {
+      setCurrentGuess((prev) => prev.slice(0, -1));
+    } else if (/^[A-Z]$/.test(key) && currentGuess.length < WORD_LENGTH) {
+      setCurrentGuess((prev) => prev + key);
     }
   };
 
-  const handleSubmit = () => {
-    if (currentGuess.length !== WORD_LENGTH || gameStatus !== 'playing') return;
-
+  const submitGuess = () => {
     const newGuesses = [...guesses, currentGuess];
     setGuesses(newGuesses);
-    setCurrentGuess('');
-
+    updateUsedLetters(currentGuess);
     if (currentGuess === TARGET_WORD) {
       setGameStatus('won');
     } else if (newGuesses.length >= MAX_ATTEMPTS) {
       setGameStatus('lost');
     }
+    setCurrentGuess('');
   };
 
-  const getLetterFeedback = (guess: string) => {
-    return guess.split('').map((char, index) => {
-      if (char === TARGET_WORD[index]) return '🟩'; // Correct letter & position
-      if (TARGET_WORD.includes(char)) return '🟨'; // Correct letter, wrong position
-      return '⬛'; // Incorrect letter
-    }).join('');
+  const updateUsedLetters = (guess: string) => {
+    const updatedLetters = { ...usedLetters };
+    guess.split('').forEach((char, idx) => {
+      if (TARGET_WORD[idx] === char) {
+        updatedLetters[char] = 'correct';
+      } else if (TARGET_WORD.includes(char)) {
+        if (updatedLetters[char] !== 'correct') updatedLetters[char] = 'present';
+      } else {
+        updatedLetters[char] = 'absent';
+      }
+    });
+    setUsedLetters(updatedLetters);
+  };
+
+  const getTileColor = (char: string, idx: number, word: string) => {
+    if (TARGET_WORD[idx] === char) return 'bg-green-500';
+    if (TARGET_WORD.includes(char)) return 'bg-yellow-500';
+    return 'bg-gray-400';
   };
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center gap-4 p-4">
-      <h1 className="text-3xl font-bold">Wordle Game</h1>
+      <h1 className="text-3xl font-bold">Wordle Clone</h1>
 
-      {guesses.map((guess, idx) => (
-        <div key={idx} className="text-xl font-mono">{getLetterFeedback(guess)}</div>
-      ))}
+      {/* Guess grid */}
+      <div className="grid grid-rows-6 gap-2">
+        {Array.from({ length: MAX_ATTEMPTS }).map((_, rowIdx) => {
+          const guess = guesses[rowIdx] || (rowIdx === guesses.length ? currentGuess : '');
+          return (
+            <div key={rowIdx} className="grid grid-cols-5 gap-2">
+              {Array.from({ length: WORD_LENGTH }).map((_, colIdx) => (
+                <div
+                  key={colIdx}
+                  className={clsx(
+                    'w-12 h-12 border rounded-md flex items-center justify-center text-xl font-bold uppercase',
+                    guess[colIdx] &&
+                      (guesses[rowIdx]
+                        ? getTileColor(guess[colIdx], colIdx, guess)
+                        : 'border-gray-500')
+                  )}
+                >
+                  {guess[colIdx] || ''}
+                </div>
+              ))}
+            </div>
+          );
+        })}
+      </div>
 
-      {gameStatus === 'playing' && (
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={currentGuess}
-            onChange={handleInputChange}
-            className="border p-2 rounded text-xl uppercase text-center w-32"
-            maxLength={WORD_LENGTH}
-            placeholder="Guess"
-          />
+      {/* On-screen keyboard */}
+      <div className="mt-4 grid grid-rows-3 gap-2">
+        {['QWERTYUIOP', 'ASDFGHJKL', 'ZXCVBNM'].map((row, idx) => (
+          <div key={idx} className="flex justify-center gap-1">
+            {row.split('').map((key) => (
+              <button
+                key={key}
+                onClick={() => handleKeyPress(key)}
+                className={clsx(
+                  'p-2 w-10 rounded font-bold text-white',
+                  usedLetters[key] === 'correct'
+                    ? 'bg-green-500'
+                    : usedLetters[key] === 'present'
+                    ? 'bg-yellow-500'
+                    : usedLetters[key] === 'absent'
+                    ? 'bg-gray-500'
+                    : 'bg-gray-700'
+                )}
+              >
+                {key}
+              </button>
+            ))}
+          </div>
+        ))}
+        {/* Control keys */}
+        <div className="flex justify-center gap-1">
           <button
-            onClick={handleSubmit}
-            className="bg-blue-500 text-white p-2 rounded"
+            onClick={() => handleKeyPress('Backspace')}
+            className="p-2 rounded bg-red-500 text-white font-bold w-20"
+          >
+            ⌫
+          </button>
+          <button
+            onClick={() => handleKeyPress('Enter')}
+            className="p-2 rounded bg-blue-500 text-white font-bold w-20"
           >
             Enter
           </button>
         </div>
-      )}
+      </div>
 
-      {gameStatus === 'won' && <div className="text-green-500 text-xl">🎉 You won!</div>}
+      {/* Game status */}
+      {gameStatus === 'won' && <div className="text-green-600 text-2xl">🎉 You won!</div>}
       {gameStatus === 'lost' && (
-        <div className="text-red-500 text-xl">
+        <div className="text-red-600 text-2xl">
           ❌ You lost! The word was <strong>{TARGET_WORD}</strong>.
         </div>
       )}
