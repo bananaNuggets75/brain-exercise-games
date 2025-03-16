@@ -4,8 +4,7 @@ import clsx from 'clsx';
 
 const WORD_LENGTH = 5;
 const MAX_ATTEMPTS = 6;
-const TARGET_WORD = 'CRANE'; // Static word for now (uppercase)
-
+const TARGET_WORD = 'CRANE';
 const KEYS = 'QWERTYUIOPASDFGHJKLZXCVBNM'.split('');
 
 const WordlePage: React.FC = () => {
@@ -18,9 +17,7 @@ const WordlePage: React.FC = () => {
     if (gameStatus !== 'playing') return;
 
     if (key === 'Enter') {
-      if (currentGuess.length === WORD_LENGTH) {
-        submitGuess();
-      }
+      if (currentGuess.length === WORD_LENGTH) submitGuess();
     } else if (key === 'Backspace') {
       setCurrentGuess((prev) => prev.slice(0, -1));
     } else if (/^[A-Z]$/.test(key) && currentGuess.length < WORD_LENGTH) {
@@ -32,16 +29,19 @@ const WordlePage: React.FC = () => {
     const newGuesses = [...guesses, currentGuess];
     setGuesses(newGuesses);
     updateUsedLetters(currentGuess);
+
     if (currentGuess === TARGET_WORD) {
       setGameStatus('won');
     } else if (newGuesses.length >= MAX_ATTEMPTS) {
       setGameStatus('lost');
     }
+
     setCurrentGuess('');
   };
 
   const updateUsedLetters = (guess: string) => {
     const updatedLetters = { ...usedLetters };
+
     guess.split('').forEach((char, idx) => {
       if (TARGET_WORD[idx] === char) {
         updatedLetters[char] = 'correct';
@@ -51,10 +51,13 @@ const WordlePage: React.FC = () => {
         updatedLetters[char] = 'absent';
       }
     });
+
     setUsedLetters(updatedLetters);
   };
 
-  const getTileColor = (char: string, idx: number, word: string) => {
+  const getTileColor = (char: string, idx: number) => {
+    if (!guesses.includes(currentGuess)) return 'border-gray-500';
+
     if (TARGET_WORD[idx] === char) return 'bg-green-500';
     if (TARGET_WORD.includes(char)) return 'bg-yellow-500';
     return 'bg-gray-400';
@@ -68,17 +71,15 @@ const WordlePage: React.FC = () => {
       <div className="grid grid-rows-6 gap-2">
         {Array.from({ length: MAX_ATTEMPTS }).map((_, rowIdx) => {
           const guess = guesses[rowIdx] || (rowIdx === guesses.length ? currentGuess : '');
+
           return (
             <div key={rowIdx} className="grid grid-cols-5 gap-2">
               {Array.from({ length: WORD_LENGTH }).map((_, colIdx) => (
                 <div
                   key={colIdx}
                   className={clsx(
-                    'w-12 h-12 border rounded-md flex items-center justify-center text-xl font-bold uppercase',
-                    guess[colIdx] &&
-                      (guesses[rowIdx]
-                        ? getTileColor(guess[colIdx], colIdx, guess)
-                        : 'border-gray-500')
+                    'w-12 h-12 border rounded-md flex items-center justify-center text-xl font-bold uppercase transition-transform duration-300 ease-in-out',
+                    guess[colIdx] ? getTileColor(guess[colIdx], colIdx) : 'border-gray-500'
                   )}
                 >
                   {guess[colIdx] || ''}
@@ -99,39 +100,43 @@ const WordlePage: React.FC = () => {
                 onClick={() => handleKeyPress(key)}
                 className={clsx(
                   'p-2 w-10 rounded font-bold text-white',
-                  usedLetters[key] === 'correct'
-                    ? 'bg-green-500'
-                    : usedLetters[key] === 'present'
-                    ? 'bg-yellow-500'
-                    : usedLetters[key] === 'absent'
-                    ? 'bg-gray-500'
-                    : 'bg-gray-700'
+                  gameStatus !== 'playing' ? 'bg-gray-500 opacity-50' :
+                  usedLetters[key] === 'correct' ? 'bg-green-500' :
+                  usedLetters[key] === 'present' ? 'bg-yellow-500' :
+                  usedLetters[key] === 'absent' ? 'bg-gray-500' :
+                  'bg-gray-700'
                 )}
+                disabled={gameStatus !== 'playing'}
               >
                 {key}
               </button>
             ))}
           </div>
         ))}
-        {/* Control keys */}
+
+        {/* Control buttons */}
         <div className="flex justify-center gap-1">
           <button
             onClick={() => handleKeyPress('Backspace')}
             className="p-2 rounded bg-red-500 text-white font-bold w-20"
+            disabled={gameStatus !== 'playing'}
           >
             ⌫
           </button>
           <button
             onClick={() => handleKeyPress('Enter')}
             className="p-2 rounded bg-blue-500 text-white font-bold w-20"
+            disabled={gameStatus !== 'playing'}
           >
             Enter
           </button>
         </div>
       </div>
 
-      {/* Game status */}
-      {gameStatus === 'won' && <div className="text-green-600 text-2xl">🎉 You won!</div>}
+      {/* Game Status */}
+      {gameStatus === 'won' && (
+        <div className="text-green-600 text-2xl">🎉 You won!</div>
+      )}
       {gameStatus === 'lost' && (
         <div className="text-red-600 text-2xl">
           ❌ You lost! The word was <strong>{TARGET_WORD}</strong>.
