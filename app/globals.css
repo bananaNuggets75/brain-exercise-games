@@ -40,3 +40,34 @@ a {
     color-scheme: dark;
   }
 }
+
+.nav-container {
+  display: flex;
+  justify-content: center;
+  padding-bottom: 20px;
+}
+
+.nav-list {
+  display: flex;
+  gap: 1.5rem; 
+  list-style: none; 
+  padding: 0;
+  margin: 0;
+}
+
+.nav-list li {
+  display: flex;
+  align-items: center;
+  font-size: 24px;
+}
+
+.nav-list a {
+  text-decoration: none;
+  color: #4b5563; /* text-gray-700 */
+  transition: color 0.2s ease;
+}
+
+.nav-list a:hover {
+  color: #3b82f6; /* hover:text-blue-500 */
+}
+
