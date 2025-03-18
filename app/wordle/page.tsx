@@ -5,7 +5,6 @@ import clsx from 'clsx';
 const WORD_LENGTH = 5;
 const MAX_ATTEMPTS = 6;
 const WORDS = ['CRANE', 'APPLE', 'BREAD', 'HOUSE', 'PLANT'];
-
 const KEYS = 'QWERTYUIOPASDFGHJKLZXCVBNM'.split('');
 
 const WordlePage: React.FC = () => {
@@ -18,7 +17,6 @@ const WordlePage: React.FC = () => {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => handleKeyPress(e.key.toUpperCase());
     window.addEventListener('keydown', handleKeyDown);
-
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [currentGuess, gameStatus]);
 
@@ -39,7 +37,6 @@ const WordlePage: React.FC = () => {
 
     const newGuesses = [...guesses, currentGuess];
     setGuesses(newGuesses);
-
     updateUsedLetters(currentGuess);
 
     if (currentGuess === targetWord) {
@@ -79,11 +76,11 @@ const WordlePage: React.FC = () => {
   };
 
   const getTileColor = (char: string, idx: number) => {
-    if (guesses.length === 0) return 'border-gray-500';
+    if (!char) return 'border-gray-500';
 
-    if (targetWord[idx] === char) return 'bg-green-500';
-    if (targetWord.includes(char)) return 'bg-yellow-500';
-    return 'bg-gray-400';
+    if (targetWord[idx] === char) return 'bg-green-500 text-white';
+    if (targetWord.includes(char)) return 'bg-yellow-500 text-white';
+    return 'bg-gray-400 text-white';
   };
 
   const resetGame = () => {
@@ -95,30 +92,32 @@ const WordlePage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center gap-4 p-4">
-      <h1 className="text-3xl font-bold">Wordle Clone</h1>
+    <div className="min-h-screen flex flex-col items-center justify-center gap-6 p-4 bg-gray-900">
+      <h1 className="text-3xl font-bold text-white">Wordle Clone</h1>
 
-      {/* Guess grid */}
-      <div className="grid grid-rows-6 gap-2">
-        {Array.from({ length: MAX_ATTEMPTS }).map((_, rowIdx) => {
-          const guess = guesses[rowIdx] || (rowIdx === guesses.length ? currentGuess : '');
+      {/* Guess Container */}
+      <div className="bg-gray-800 p-4 rounded-md shadow-md">
+        <div className="grid grid-rows-6 gap-2">
+          {Array.from({ length: MAX_ATTEMPTS }).map((_, rowIdx) => {
+            const guess = guesses[rowIdx] || (rowIdx === guesses.length ? currentGuess : '');
 
-          return (
-            <div key={rowIdx} className="grid grid-cols-5 gap-2">
-              {Array.from({ length: WORD_LENGTH }).map((_, colIdx) => (
-                <div
-                  key={colIdx}
-                  className={clsx(
-                    'w-12 h-12 border rounded-md flex items-center justify-center text-xl font-bold uppercase transition-transform duration-300 ease-in-out',
-                    guess[colIdx] ? getTileColor(guess[colIdx], colIdx) : 'border-gray-500'
-                  )}
-                >
-                  {guess[colIdx] || ''}
-                </div>
-              ))}
-            </div>
-          );
-        })}
+            return (
+              <div key={rowIdx} className="grid grid-cols-5 gap-2">
+                {Array.from({ length: WORD_LENGTH }).map((_, colIdx) => (
+                  <div
+                    key={colIdx}
+                    className={clsx(
+                      'w-14 h-14 border rounded-md flex items-center justify-center text-2xl font-bold uppercase transition-transform duration-300 ease-in-out',
+                      guess[colIdx] ? getTileColor(guess[colIdx], colIdx) : 'border-gray-600 bg-gray-700'
+                    )}
+                  >
+                    {guess[colIdx] || ''}
+                  </div>
+                ))}
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       {/* On-screen keyboard */}
@@ -143,24 +142,24 @@ const WordlePage: React.FC = () => {
             ))}
           </div>
         ))}
+      </div>
 
-        {/* Control buttons */}
-        <div className="flex justify-center gap-2 mt-2">
-          <button onClick={resetGame} className="p-2 bg-gray-700 text-white rounded">
-            🔄 Reset
-          </button>
-          <button onClick={() => handleKeyPress('ENTER')} className="p-2 bg-blue-500 text-white rounded">
-            Enter
-          </button>
-        </div>
+      {/* Control buttons */}
+      <div className="flex justify-center gap-2 mt-2">
+        <button onClick={resetGame} className="p-2 bg-gray-700 text-white rounded">
+          🔄 Reset
+        </button>
+        <button onClick={() => handleKeyPress('ENTER')} className="p-2 bg-blue-500 text-white rounded">
+          Enter
+        </button>
       </div>
 
       {/* Game Status */}
       {gameStatus === 'won' && (
-        <div className="text-green-600 text-2xl mt-4">🎉 You won!</div>
+        <div className="text-green-400 text-2xl mt-4">🎉 You won!</div>
       )}
       {gameStatus === 'lost' && (
-        <div className="text-red-600 text-2xl mt-4">
+        <div className="text-red-400 text-2xl mt-4">
           ❌ You lost! The word was <strong>{targetWord}</strong>.
         </div>
       )}
