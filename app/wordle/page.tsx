@@ -1,11 +1,10 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import clsx from 'clsx';
 
 const WORD_LENGTH = 5;
 const MAX_ATTEMPTS = 6;
 const WORDS = ['CRANE', 'APPLE', 'BREAD', 'HOUSE', 'PLANT'];
-const KEYS = 'QWERTYUIOPASDFGHJKLZXCVBNM'.split('');
 
 const WordlePage: React.FC = () => {
   const [targetWord, setTargetWord] = useState<string>(WORDS[Math.floor(Math.random() * WORDS.length)]);
@@ -14,25 +13,8 @@ const WordlePage: React.FC = () => {
   const [gameStatus, setGameStatus] = useState<'playing' | 'won' | 'lost'>('playing');
   const [usedLetters, setUsedLetters] = useState<{ [key: string]: string }>({});
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => handleKeyPress(e.key.toUpperCase());
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [currentGuess, gameStatus]);
-
-  const handleKeyPress = (key: string) => {
-    if (gameStatus !== 'playing') return;
-
-    if (key === 'ENTER') {
-      if (currentGuess.length === WORD_LENGTH) submitGuess();
-    } else if (key === 'BACKSPACE') {
-      setCurrentGuess((prev) => prev.slice(0, -1));
-    } else if (/^[A-Z]$/.test(key) && currentGuess.length < WORD_LENGTH) {
-      setCurrentGuess((prev) => prev + key);
-    }
-  };
-
-  const submitGuess = () => {
+  // ✅ Define submitGuess before useCallback
+  const submitGuess = useCallback(() => {
     if (guesses.length >= MAX_ATTEMPTS || gameStatus !== 'playing') return;
 
     const newGuesses = [...guesses, currentGuess];
@@ -46,7 +28,30 @@ const WordlePage: React.FC = () => {
     }
 
     setCurrentGuess('');
-  };
+  }, [currentGuess, guesses, gameStatus, targetWord]);
+
+  // ✅ Wrap handleKeyPress with useCallback
+  const handleKeyPress = useCallback(
+    (key: string) => {
+      if (gameStatus !== 'playing') return;
+
+      if (key === 'ENTER') {
+        if (currentGuess.length === WORD_LENGTH) submitGuess();
+      } else if (key === 'BACKSPACE') {
+        setCurrentGuess((prev) => prev.slice(0, -1));
+      } else if (/^[A-Z]$/.test(key) && currentGuess.length < WORD_LENGTH) {
+        setCurrentGuess((prev) => prev + key);
+      }
+    },
+    [gameStatus, currentGuess, submitGuess]
+  );
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => handleKeyPress(e.key.toUpperCase());
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleKeyPress]);
 
   const updateUsedLetters = (guess: string) => {
     const updatedLetters = { ...usedLetters };
