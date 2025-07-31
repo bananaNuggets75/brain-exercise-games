@@ -1,10 +1,16 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
-import clsx from 'clsx';
 
 const WORD_LENGTH = 5;
 const MAX_ATTEMPTS = 6;
-const WORDS = ['CRANE', 'APPLE', 'BREAD', 'HOUSE', 'PLANT'];
+
+// Expanded word list for better gameplay
+const WORDS = [
+  'CRANE', 'APPLE', 'BREAD', 'HOUSE', 'PLANT', 'STONE', 'BEACH', 'NIGHT', 'LIGHT', 'WORLD',
+  'WATER', 'FLAME', 'SPACE', 'DREAM', 'HEART', 'PEACE', 'SMILE', 'MUSIC', 'DANCE', 'MAGIC',
+  'BRAVE', 'SWIFT', 'SHARP', 'CLEAR', 'FRESH', 'STORM', 'GHOST', 'QUEEN', 'PRIDE', 'GRACE',
+  'SOUND', 'VOICE', 'LAUGH', 'SHINE', 'CHARM', 'POWER', 'TRUST', 'YOUTH', 'TRUTH', 'FAITH'
+];
 
 const WordlePage: React.FC = () => {
   const [targetWord, setTargetWord] = useState<string>(WORDS[Math.floor(Math.random() * WORDS.length)]);
@@ -17,28 +23,53 @@ const WordlePage: React.FC = () => {
   const [stats, setStats] = useState({ played: 0, won: 0, streak: 0 });
 
   const submitGuess = useCallback(() => {
+    if (currentGuess.length !== WORD_LENGTH) {
+      setShakeRow(guesses.length);
+      setTimeout(() => setShakeRow(-1), 600);
+      return;
+    }
+
     if (guesses.length >= MAX_ATTEMPTS || gameStatus !== 'playing') return;
 
     const newGuesses = [...guesses, currentGuess];
     setGuesses(newGuesses);
-    updateUsedLetters(currentGuess);
+    setFlipRow(guesses.length);
+    
+    // Delay the letter updates to sync with flip animation
+    setTimeout(() => {
+      updateUsedLetters(currentGuess);
+      setFlipRow(-1);
+    }, 300);
 
     if (currentGuess === targetWord) {
-      setGameStatus('won');
+      setTimeout(() => {
+        setGameStatus('won');
+        setStats(prev => ({ 
+          played: prev.played + 1, 
+          won: prev.won + 1, 
+          streak: prev.streak + 1 
+        }));
+      }, 600);
     } else if (newGuesses.length === MAX_ATTEMPTS) {
-      setGameStatus('lost');
+      setTimeout(() => {
+        setGameStatus('lost');
+        setStats(prev => ({ 
+          played: prev.played + 1, 
+          won: prev.won, 
+          streak: 0 
+        }));
+      }, 600);
     }
 
     setCurrentGuess('');
   }, [currentGuess, guesses, gameStatus, targetWord]);
 
-  // ✅ Wrap handleKeyPress with useCallback
   const handleKeyPress = useCallback(
     (key: string) => {
       if (gameStatus !== 'playing') return;
 
       if (key === 'ENTER') {
-        if (currentGuess.length === WORD_LENGTH) submitGuess();
+        submitGuess();
       } else if (key === 'BACKSPACE') {
         setCurrentGuess((prev) => prev.slice(0, -1));
       } else if (/^[A-Z]$/.test(key) && currentGuess.length < WORD_LENGTH) {
@@ -51,7 +82,6 @@ const WordlePage: React.FC = () => {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => handleKeyPress(e.key.toUpperCase());
     window.addEventListener('keydown', handleKeyDown);
-
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleKeyPress]);
 
@@ -64,30 +94,35 @@ const WordlePage: React.FC = () => {
     guessArray.forEach((char, idx) => {
       if (targetArray[idx] === char) {
         updatedLetters[char] = 'correct';
-        targetArray[idx] = '_'; // Mark as used
-        guessArray[idx] = '*'; // Avoid duplicate counting
+        targetArray[idx] = '_';
+        guessArray[idx] = '*';
       }
     });
 
     // Second pass: Mark present or absent
     guessArray.forEach((char) => {
-      if (char !== '*' && targetArray.includes(char)) {
-        updatedLetters[char] = 'present';
-        targetArray[targetArray.indexOf(char)] = '_';
-      } else if (char !== '*' && !targetArray.includes(char)) {
-        updatedLetters[char] = 'absent';
+      if (char !== '*' && !updatedLetters[char]) {
+        if (targetArray.includes(char)) {
+          updatedLetters[char] = 'present';
+          targetArray[targetArray.indexOf(char)] = '_';
+        } else {
+          updatedLetters[char] = 'absent';
+        }
       }
     });
 
     setUsedLetters(updatedLetters);
   };
 
-  const getTileColor = (char: string, idx: number) => {
-    if (!char) return 'border-gray-500';
+  const getTileColor = (char: string, idx: number, rowIdx: number) => {
+    if (!char) return 'border-gray-600 bg-gray-800';
+    
+    // Don't show colors for current guess
+    if (rowIdx >= guesses.length) return 'border-gray-500 bg-gray-700 text-white';
 
-    if (targetWord[idx] === char) return 'bg-green-500 text-white';
-    if (targetWord.includes(char)) return 'bg-yellow-500 text-white';
-    return 'bg-gray-400 text-white';
+    if (targetWord[idx] === char) return 'bg-green-500 border-green-500 text-white';
+    if (targetWord.includes(char)) return 'bg-yellow-500 border-yellow-500 text-white';
+    return 'bg-gray-500 border-gray-500 text-white';
   };
 
   const resetGame = () => {
@@ -96,6 +131,8 @@ const WordlePage: React.FC = () => {
     setCurrentGuess('');
     setGameStatus('playing');
     setUsedLetters({});
+    setShakeRow(-1);
+    setFlipRow(-1);
   };
 
   const getKeyboardKeyStyle = (key: string) => {
@@ -108,24 +145,43 @@ const WordlePage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center gap-6 p-4 bg-gray-900">
-      <h1 className="text-3xl font-bold text-white">Wordle Clone</h1>
+    <div className="min-h-screen flex flex-col items-center justify-center gap-4 p-4 bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900">
+      <div className="text-center mb-6">
+        <h1 className="text-4xl font-bold text-white mb-2 tracking-wide">WORDLE</h1>
+        <p className="text-gray-300">Guess the 5-letter word in 6 tries</p>
+        <div className="flex gap-4 mt-2 text-sm text-gray-400">
+          <span>Played: {stats.played}</span>
+          <span>Won: {stats.won}</span>
+          <span>Streak: {stats.streak}</span>
+        </div>
+      </div>
 
-      {/* Guess Container */}
-      <div className="bg-gray-800 p-4 rounded-md shadow-md">
+      {/* Game Grid */}
+      <div className="bg-gray-800/50 p-6 rounded-xl shadow-2xl backdrop-blur-sm border border-gray-700">
         <div className="grid grid-rows-6 gap-2">
           {Array.from({ length: MAX_ATTEMPTS }).map((_, rowIdx) => {
             const guess = guesses[rowIdx] || (rowIdx === guesses.length ? currentGuess : '');
+            const isShaking = shakeRow === rowIdx;
+            const isFlipping = flipRow === rowIdx;
 
             return (
-              <div key={rowIdx} className="grid grid-cols-5 gap-2">
+              <div 
+                key={rowIdx} 
+                className={`grid grid-cols-5 gap-2 ${isShaking ? 'animate-pulse' : ''}`}
+              >
                 {Array.from({ length: WORD_LENGTH }).map((_, colIdx) => (
                   <div
                     key={colIdx}
-                    className={clsx(
-                      'w-14 h-14 border rounded-md flex items-center justify-center text-2xl font-bold uppercase transition-transform duration-300 ease-in-out',
-                      guess[colIdx] ? getTileColor(guess[colIdx], colIdx) : 'border-gray-600 bg-gray-700'
-                    )}
+                    className={`
+                      w-16 h-16 border-2 rounded-lg flex items-center justify-center 
+                      text-2xl font-bold uppercase transition-all duration-300
+                      ${getTileColor(guess[colIdx], colIdx, rowIdx)}
+                      ${isFlipping ? 'animate-pulse' : ''}
+                      ${guess[colIdx] ? 'scale-100' : 'scale-95'}
+                    `}
+                    style={{
+                      animationDelay: isFlipping ? `${colIdx * 100}ms` : '0ms'
+                    }}
                   >
                     {guess[colIdx] || ''}
                   </div>
@@ -136,44 +192,25 @@ const WordlePage: React.FC = () => {
         </div>
       </div>
 
-      
-
-      {/* On-screen keyboard */}
-      <div className="mt-4 grid grid-rows-3 gap-2">
-        {['QWERTYUIOP', 'ASDFGHJKL', 'ZXCVBNM'].map((row, idx) => (
-          <div key={idx} className="flex justify-center gap-1">
-            {row.split('').map((key) => (
+      {/* Virtual Keyboard */}
+      <div className="w-full max-w-lg">
+        <div className="flex flex-col gap-2">
+          {/* First row */}
+          <div className="flex gap-1 justify-center">
+            {'QWERTYUIOP'.split('').map((key) => (
               <button
                 key={key}
                 onClick={() => handleKeyPress(key)}
-                className={clsx(
-                  'p-2 w-10 rounded font-bold text-white',
-                  usedLetters[key] === 'correct' ? 'bg-green-500' :
-                  usedLetters[key] === 'present' ? 'bg-yellow-500' :
-                  usedLetters[key] === 'absent' ? 'bg-gray-500' :
-                  'bg-gray-700'
-                )}
+                className={getKeyboardKeyStyle(key)}
                 disabled={gameStatus !== 'playing'}
               >
                 {key}
               </button>
             ))}
           </div>
-        ))}
-      </div>
-
-      {/* Control buttons */}
-      <div className="flex justify-center gap-2 mt-2">
-        <button onClick={resetGame} className="p-2 bg-gray-700 text-white rounded">
-          🔄 Reset
-        </button>
-        <button onClick={() => handleKeyPress('ENTER')} className="p-2 bg-blue-500 text-white rounded">
-          Enter
-        </button>
-      </div>
-
-      {/* Second row */}
-      <div className="flex gap-1 justify-center">
+          
+          {/* Second row */}
+          <div className="flex gap-1 justify-center">
             {'ASDFGHJKL'.split('').map((key) => (
               <button
                 key={key}
@@ -213,6 +250,8 @@ const WordlePage: React.FC = () => {
               ⌫
             </button>
           </div>
+        </div>
+      </div>
 
       {/* Game Status */}
       {gameStatus === 'won' && (
