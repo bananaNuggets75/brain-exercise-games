@@ -17,6 +17,10 @@ interface GameStats {
   streak: number;
 }
 
+// to do: do not enter if it is not a word (random letters)
+// store the game stats
+// get a library of words from an API or a file
+
 type GameStatus = 'playing' | 'won' | 'lost';
 type LetterStatus = 'correct' | 'present' | 'absent';
 
@@ -32,6 +36,37 @@ const WordlePage: React.FC = () => {
   const [flipRow, setFlipRow] = useState<number>(-1);
   const [stats, setStats] = useState<GameStats>({ played: 0, won: 0, streak: 0 });
 
+
+  const updateUsedLetters = useCallback((guess: string) => {
+    const updatedLetters = { ...usedLetters };
+    const targetArray = targetWord.split('');
+    const guessArray = guess.split('');
+  
+    // First pass: Mark correct letters
+    guessArray.forEach((char, idx) => {
+      if (targetArray[idx] === char) {
+        updatedLetters[char] = 'correct';
+        targetArray[idx] = '_';
+        guessArray[idx] = '*';
+      }
+    });
+  
+    // Second pass: Mark present or absent
+    guessArray.forEach((char) => {
+      if (char !== '*' && !updatedLetters[char]) {
+        if (targetArray.includes(char)) {
+          updatedLetters[char] = 'present';
+          targetArray[targetArray.indexOf(char)] = '_';
+        } else {
+          updatedLetters[char] = 'absent';
+        }
+      }
+    });
+  
+    setUsedLetters(updatedLetters);
+  }, [usedLetters, targetWord]);
+
+  
   const submitGuess = useCallback(() => {
     if (currentGuess.length !== WORD_LENGTH) {
       setShakeRow(guesses.length);
@@ -71,7 +106,7 @@ const WordlePage: React.FC = () => {
     }
 
     setCurrentGuess('');
-  }, [currentGuess, guesses, gameStatus, targetWord]);
+  }, [currentGuess, guesses, gameStatus, targetWord, updateUsedLetters]);
 
   const handleKeyPress = useCallback(
     (key: string) => {
@@ -93,35 +128,7 @@ const WordlePage: React.FC = () => {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleKeyPress]);
-
-  const updateUsedLetters = (guess: string) => {
-    const updatedLetters = { ...usedLetters };
-    const targetArray = targetWord.split('');
-    const guessArray = guess.split('');
-
-    // First pass: Mark correct letters
-    guessArray.forEach((char, idx) => {
-      if (targetArray[idx] === char) {
-        updatedLetters[char] = 'correct';
-        targetArray[idx] = '_';
-        guessArray[idx] = '*';
-      }
-    });
-
-    // Second pass: Mark present or absent
-    guessArray.forEach((char) => {
-      if (char !== '*' && !updatedLetters[char]) {
-        if (targetArray.includes(char)) {
-          updatedLetters[char] = 'present';
-          targetArray[targetArray.indexOf(char)] = '_';
-        } else {
-          updatedLetters[char] = 'absent';
-        }
-      }
-    });
-
-    setUsedLetters(updatedLetters);
-  };
+  
 
   const getTileClass = (char: string, idx: number, rowIdx: number): string => {
     if (!char) return 'tile';
