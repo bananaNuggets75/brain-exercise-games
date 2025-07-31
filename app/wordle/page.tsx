@@ -12,8 +12,10 @@ const WordlePage: React.FC = () => {
   const [currentGuess, setCurrentGuess] = useState<string>('');
   const [gameStatus, setGameStatus] = useState<'playing' | 'won' | 'lost'>('playing');
   const [usedLetters, setUsedLetters] = useState<{ [key: string]: string }>({});
+  const [shakeRow, setShakeRow] = useState<number>(-1);
+  const [flipRow, setFlipRow] = useState<number>(-1);
+  const [stats, setStats] = useState({ played: 0, won: 0, streak: 0 });
 
-  // ✅ Define submitGuess before useCallback
   const submitGuess = useCallback(() => {
     if (guesses.length >= MAX_ATTEMPTS || gameStatus !== 'playing') return;
 
@@ -96,6 +98,15 @@ const WordlePage: React.FC = () => {
     setUsedLetters({});
   };
 
+  const getKeyboardKeyStyle = (key: string) => {
+    const baseStyle = 'px-3 py-4 rounded-md font-bold text-sm transition-all duration-200 hover:scale-105';
+    
+    if (usedLetters[key] === 'correct') return `${baseStyle} bg-green-500 text-white`;
+    if (usedLetters[key] === 'present') return `${baseStyle} bg-yellow-500 text-white`;
+    if (usedLetters[key] === 'absent') return `${baseStyle} bg-gray-500 text-gray-300`;
+    return `${baseStyle} bg-gray-700 text-white hover:bg-gray-600`;
+  };
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center gap-6 p-4 bg-gray-900">
       <h1 className="text-3xl font-bold text-white">Wordle Clone</h1>
@@ -124,6 +135,8 @@ const WordlePage: React.FC = () => {
           })}
         </div>
       </div>
+
+      
 
       {/* On-screen keyboard */}
       <div className="mt-4 grid grid-rows-3 gap-2">
@@ -161,13 +174,26 @@ const WordlePage: React.FC = () => {
 
       {/* Game Status */}
       {gameStatus === 'won' && (
-        <div className="text-green-400 text-2xl mt-4">🎉 You won!</div>
-      )}
-      {gameStatus === 'lost' && (
-        <div className="text-red-400 text-2xl mt-4">
-          ❌ You lost! The word was <strong>{targetWord}</strong>.
+        <div className="text-center bg-green-500/20 border border-green-500 rounded-xl p-6 backdrop-blur-sm">
+          <div className="text-green-400 text-2xl mb-2">🎉 Congratulations!</div>
+          <p className="text-green-300">You guessed the word in {guesses.length} tries!</p>
         </div>
       )}
+      
+      {gameStatus === 'lost' && (
+        <div className="text-center bg-red-500/20 border border-red-500 rounded-xl p-6 backdrop-blur-sm">
+          <div className="text-red-400 text-2xl mb-2">😞 Game Over</div>
+          <p className="text-red-300">The word was <strong className="text-white">{targetWord}</strong></p>
+        </div>
+      )}
+
+      {/* Reset Button */}
+      <button 
+        onClick={resetGame} 
+        className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-all duration-200 hover:scale-105 shadow-lg"
+      >
+        🎮 New Game
+      </button>
     </div>
   );
 };
