@@ -172,6 +172,48 @@ const WordlePage: React.FC = () => {
         </button>
       </div>
 
+      {/* Second row */}
+      <div className="flex gap-1 justify-center">
+            {'ASDFGHJKL'.split('').map((key) => (
+              <button
+                key={key}
+                onClick={() => handleKeyPress(key)}
+                className={getKeyboardKeyStyle(key)}
+                disabled={gameStatus !== 'playing'}
+              >
+                {key}
+              </button>
+            ))}
+          </div>
+          
+          {/* Third row */}
+          <div className="flex gap-1 justify-center">
+            <button
+              onClick={() => handleKeyPress('ENTER')}
+              className="px-4 py-4 bg-gray-700 text-white rounded-md font-bold text-sm hover:bg-gray-600 transition-all duration-200"
+              disabled={gameStatus !== 'playing'}
+            >
+              ENTER
+            </button>
+            {'ZXCVBNM'.split('').map((key) => (
+              <button
+                key={key}
+                onClick={() => handleKeyPress(key)}
+                className={getKeyboardKeyStyle(key)}
+                disabled={gameStatus !== 'playing'}
+              >
+                {key}
+              </button>
+            ))}
+            <button
+              onClick={() => handleKeyPress('BACKSPACE')}
+              className="px-4 py-4 bg-gray-700 text-white rounded-md font-bold text-sm hover:bg-gray-600 transition-all duration-200"
+              disabled={gameStatus !== 'playing'}
+            >
+              ⌫
+            </button>
+          </div>
+
       {/* Game Status */}
       {gameStatus === 'won' && (
         <div className="text-center bg-green-500/20 border border-green-500 rounded-xl p-6 backdrop-blur-sm">
