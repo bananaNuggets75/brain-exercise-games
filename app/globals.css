@@ -1,6 +1,8 @@
 :root {
-  --background: #0f0f23;
-  --foreground: #ffffff;
+  --background: #ffffff;
+  --foreground: #171717;
+  
+  /* Wordle Game Colors */
   --gray-900: #111827;
   --gray-800: #1f2937;
   --gray-700: #374151;
@@ -18,10 +20,10 @@
   --red-500: #ef4444;
 }
 
-@media (prefers-color-scheme: light) {
+@media (prefers-color-scheme: dark) {
   :root {
-    --background: #ffffff;
-    --foreground: #0f0f23;
+    --background: #0a0a0a;
+    --foreground: #ededed;
   }
 }
 
@@ -29,17 +31,14 @@ html,
 body {
   max-width: 100vw;
   overflow-x: hidden;
-  margin: 0;
-  padding: 0;
 }
 
 body {
   color: var(--foreground);
-  background: linear-gradient(135deg, var(--gray-900) 0%, var(--blue-900) 50%, var(--purple-900) 100%);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  background: var(--background);
+  font-family: Arial, Helvetica, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  min-height: 100vh;
 }
 
 * {
@@ -48,30 +47,60 @@ body {
   margin: 0;
 }
 
-body {
-  margin: 0;
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  html {
+    color-scheme: dark;
+  }
+}
+
+.nav-container {
+  display: flex;
+  justify-content: center;
+  padding-bottom: 20px;
+}
+
+.nav-list {
+  display: flex;
+  gap: 1.5rem; 
+  list-style: none; 
   padding: 0;
+  margin: 0;
 }
 
-#root, .main-container {
-  min-height: 100vh;
+.nav-list li {
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  font-size: 24px;
 }
 
-.app-container {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
+.nav-list a {
+  text-decoration: none;
+  color: #4b5563; /* text-gray-700 */
+  transition: color 0.2s ease;
 }
 
-/* Wordle Game Styles */
+.nav-list a:hover {
+  color: #3b82f6; /* hover:text-blue-500 */
+}
+
+/* ===== WORDLE GAME STYLES ===== */
+
+/* Wordle Page Background Override */
 .wordle-container {
-  min-height: 100vh !important;
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center !important;
-  justify-content: center !important;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: linear-gradient(135deg, var(--gray-900) 0%, var(--blue-900) 50%, var(--purple-900) 100%);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
 }
 
 .wordle-header {
@@ -124,6 +153,10 @@ body {
   animation: shake 0.6s ease-in-out;
 }
 
+.guess-row.flip {
+  animation: flip 0.6s ease-in-out;
+}
+
 .tile {
   width: 4rem;
   height: 4rem;
@@ -137,35 +170,28 @@ body {
   text-transform: uppercase;
   transition: all 0.3s ease;
   background: var(--gray-800);
+  color: white;
 }
 
 .tile.filled {
-  transform: scale(1);
   border-color: var(--gray-500);
   background: var(--gray-700);
-  color: white;
+  transform: scale(1);
 }
 
 .tile.correct {
   background: var(--green-500);
   border-color: var(--green-500);
-  color: white;
 }
 
 .tile.present {
   background: var(--yellow-500);
   border-color: var(--yellow-500);
-  color: white;
 }
 
 .tile.absent {
   background: var(--gray-500);
   border-color: var(--gray-500);
-  color: white;
-}
-
-.tile.flip {
-  animation: flip 0.6s ease-in-out;
 }
 
 .keyboard {
@@ -210,12 +236,10 @@ body {
 
 .key.correct {
   background: var(--green-500);
-  color: white;
 }
 
 .key.present {
   background: var(--yellow-500);
-  color: white;
 }
 
 .key.absent {
@@ -233,6 +257,7 @@ body {
   border-radius: 0.75rem;
   padding: 1.5rem;
   backdrop-filter: blur(8px);
+  margin-top: 1rem;
 }
 
 .status-won {
@@ -275,6 +300,7 @@ body {
   cursor: pointer;
   transition: all 0.2s ease;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  margin-top: 1rem;
 }
 
 .new-game-btn:hover {
@@ -293,15 +319,6 @@ body {
   0% { transform: rotateX(0); }
   50% { transform: rotateX(-90deg); }
   100% { transform: rotateX(0); }
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}
-
-.animate-pulse {
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
 /* Responsive Design */
