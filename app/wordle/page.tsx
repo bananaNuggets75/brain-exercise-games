@@ -4,7 +4,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 const WORD_LENGTH = 5;
 const MAX_ATTEMPTS = 6;
 
-// Expanded word list for better gameplay
 const WORDS = [
   'CRANE', 'APPLE', 'BREAD', 'HOUSE', 'PLANT', 'STONE', 'BEACH', 'NIGHT', 'LIGHT', 'WORLD',
   'WATER', 'FLAME', 'SPACE', 'DREAM', 'HEART', 'PEACE', 'SMILE', 'MUSIC', 'DANCE', 'MAGIC',
@@ -12,15 +11,26 @@ const WORDS = [
   'SOUND', 'VOICE', 'LAUGH', 'SHINE', 'CHARM', 'POWER', 'TRUST', 'YOUTH', 'TRUTH', 'FAITH'
 ];
 
+interface GameStats {
+  played: number;
+  won: number;
+  streak: number;
+}
+
+type GameStatus = 'playing' | 'won' | 'lost';
+type LetterStatus = 'correct' | 'present' | 'absent';
+
 const WordlePage: React.FC = () => {
-  const [targetWord, setTargetWord] = useState<string>(WORDS[Math.floor(Math.random() * WORDS.length)]);
+  const [targetWord, setTargetWord] = useState<string>(
+    WORDS[Math.floor(Math.random() * WORDS.length)]
+  );
   const [guesses, setGuesses] = useState<string[]>([]);
   const [currentGuess, setCurrentGuess] = useState<string>('');
-  const [gameStatus, setGameStatus] = useState<'playing' | 'won' | 'lost'>('playing');
-  const [usedLetters, setUsedLetters] = useState<{ [key: string]: string }>({});
+  const [gameStatus, setGameStatus] = useState<GameStatus>('playing');
+  const [usedLetters, setUsedLetters] = useState<{ [key: string]: LetterStatus }>({});
   const [shakeRow, setShakeRow] = useState<number>(-1);
   const [flipRow, setFlipRow] = useState<number>(-1);
-  const [stats, setStats] = useState({ played: 0, won: 0, streak: 0 });
+  const [stats, setStats] = useState<GameStats>({ played: 0, won: 0, streak: 0 });
 
   const submitGuess = useCallback(() => {
     if (currentGuess.length !== WORD_LENGTH) {
@@ -35,7 +45,6 @@ const WordlePage: React.FC = () => {
     setGuesses(newGuesses);
     setFlipRow(guesses.length);
     
-    // Delay the letter updates to sync with flip animation
     setTimeout(() => {
       updateUsedLetters(currentGuess);
       setFlipRow(-1);
@@ -114,15 +123,24 @@ const WordlePage: React.FC = () => {
     setUsedLetters(updatedLetters);
   };
 
-  const getTileColor = (char: string, idx: number, rowIdx: number) => {
-    if (!char) return 'border-gray-600 bg-gray-800';
+  const getTileClass = (char: string, idx: number, rowIdx: number): string => {
+    if (!char) return 'tile';
     
     // Don't show colors for current guess
-    if (rowIdx >= guesses.length) return 'border-gray-500 bg-gray-700 text-white';
+    if (rowIdx >= guesses.length) return 'tile filled';
 
-    if (targetWord[idx] === char) return 'bg-green-500 border-green-500 text-white';
-    if (targetWord.includes(char)) return 'bg-yellow-500 border-yellow-500 text-white';
-    return 'bg-gray-500 border-gray-500 text-white';
+    if (targetWord[idx] === char) return 'tile correct';
+    if (targetWord.includes(char)) return 'tile present';
+    return 'tile absent';
+  };
+
+  const getKeyClass = (key: string): string => {
+    const baseClass = key === 'ENTER' || key === 'BACKSPACE' ? 'key special' : 'key';
+    
+    if (usedLetters[key] === 'correct') return `${baseClass} correct`;
+    if (usedLetters[key] === 'present') return `${baseClass} present`;
+    if (usedLetters[key] === 'absent') return `${baseClass} absent`;
+    return baseClass;
   };
 
   const resetGame = () => {
@@ -135,30 +153,26 @@ const WordlePage: React.FC = () => {
     setFlipRow(-1);
   };
 
-  const getKeyboardKeyStyle = (key: string) => {
-    const baseStyle = 'px-3 py-4 rounded-md font-bold text-sm transition-all duration-200 hover:scale-105';
-    
-    if (usedLetters[key] === 'correct') return `${baseStyle} bg-green-500 text-white`;
-    if (usedLetters[key] === 'present') return `${baseStyle} bg-yellow-500 text-white`;
-    if (usedLetters[key] === 'absent') return `${baseStyle} bg-gray-500 text-gray-300`;
-    return `${baseStyle} bg-gray-700 text-white hover:bg-gray-600`;
-  };
+  const keyboardRows = [
+    ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
+    ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'],
+    ['ENTER', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', 'BACKSPACE']
+  ];
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center gap-4 p-4 bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900">
-      <div className="text-center mb-6">
-        <h1 className="text-4xl font-bold text-white mb-2 tracking-wide">WORDLE</h1>
-        <p className="text-gray-300">Guess the 5-letter word in 6 tries</p>
-        <div className="flex gap-4 mt-2 text-sm text-gray-400">
+    <div className="wordle-container">
+      <div className="wordle-header">
+        <h1 className="wordle-title">WORDLE</h1>
+        <p className="wordle-subtitle">Guess the 5-letter word in 6 tries</p>
+        <div className="wordle-stats">
           <span>Played: {stats.played}</span>
           <span>Won: {stats.won}</span>
           <span>Streak: {stats.streak}</span>
         </div>
       </div>
 
-      {/* Game Grid */}
-      <div className="bg-gray-800/50 p-6 rounded-xl shadow-2xl backdrop-blur-sm border border-gray-700">
-        <div className="grid grid-rows-6 gap-2">
+      <div className="game-board">
+        <div className="guess-grid">
           {Array.from({ length: MAX_ATTEMPTS }).map((_, rowIdx) => {
             const guess = guesses[rowIdx] || (rowIdx === guesses.length ? currentGuess : '');
             const isShaking = shakeRow === rowIdx;
@@ -167,21 +181,12 @@ const WordlePage: React.FC = () => {
             return (
               <div 
                 key={rowIdx} 
-                className={`grid grid-cols-5 gap-2 ${isShaking ? 'animate-pulse' : ''}`}
+                className={`guess-row ${isShaking ? 'shake' : ''} ${isFlipping ? 'flip' : ''}`}
               >
                 {Array.from({ length: WORD_LENGTH }).map((_, colIdx) => (
                   <div
                     key={colIdx}
-                    className={`
-                      w-16 h-16 border-2 rounded-lg flex items-center justify-center 
-                      text-2xl font-bold uppercase transition-all duration-300
-                      ${getTileColor(guess[colIdx], colIdx, rowIdx)}
-                      ${isFlipping ? 'animate-pulse' : ''}
-                      ${guess[colIdx] ? 'scale-100' : 'scale-95'}
-                    `}
-                    style={{
-                      animationDelay: isFlipping ? `${colIdx * 100}ms` : '0ms'
-                    }}
+                    className={getTileClass(guess[colIdx], colIdx, rowIdx)}
                   >
                     {guess[colIdx] || ''}
                   </div>
@@ -192,87 +197,40 @@ const WordlePage: React.FC = () => {
         </div>
       </div>
 
-      {/* Virtual Keyboard */}
-      <div className="w-full max-w-lg">
-        <div className="flex flex-col gap-2">
-          {/* First row */}
-          <div className="flex gap-1 justify-center">
-            {'QWERTYUIOP'.split('').map((key) => (
-              <button
-                key={key}
-                onClick={() => handleKeyPress(key)}
-                className={getKeyboardKeyStyle(key)}
-                disabled={gameStatus !== 'playing'}
-              >
-                {key}
-              </button>
-            ))}
-          </div>
-          
-          {/* Second row */}
-          <div className="flex gap-1 justify-center">
-            {'ASDFGHJKL'.split('').map((key) => (
-              <button
-                key={key}
-                onClick={() => handleKeyPress(key)}
-                className={getKeyboardKeyStyle(key)}
-                disabled={gameStatus !== 'playing'}
-              >
-                {key}
-              </button>
-            ))}
-          </div>
-          
-          {/* Third row */}
-          <div className="flex gap-1 justify-center">
-            <button
-              onClick={() => handleKeyPress('ENTER')}
-              className="px-4 py-4 bg-gray-700 text-white rounded-md font-bold text-sm hover:bg-gray-600 transition-all duration-200"
-              disabled={gameStatus !== 'playing'}
-            >
-              ENTER
-            </button>
-            {'ZXCVBNM'.split('').map((key) => (
-              <button
-                key={key}
-                onClick={() => handleKeyPress(key)}
-                className={getKeyboardKeyStyle(key)}
-                disabled={gameStatus !== 'playing'}
-              >
-                {key}
-              </button>
-            ))}
-            <button
-              onClick={() => handleKeyPress('BACKSPACE')}
-              className="px-4 py-4 bg-gray-700 text-white rounded-md font-bold text-sm hover:bg-gray-600 transition-all duration-200"
-              disabled={gameStatus !== 'playing'}
-            >
-              ⌫
-            </button>
-          </div>
+      <div className="keyboard">
+        <div className="keyboard-container">
+          {keyboardRows.map((row, rowIdx) => (
+            <div key={rowIdx} className="keyboard-row">
+              {row.map((key) => (
+                <button
+                  key={key}
+                  onClick={() => handleKeyPress(key)}
+                  className={getKeyClass(key)}
+                  disabled={gameStatus !== 'playing'}
+                >
+                  {key === 'BACKSPACE' ? '⌫' : key}
+                </button>
+              ))}
+            </div>
+          ))}
         </div>
       </div>
 
-      {/* Game Status */}
       {gameStatus === 'won' && (
-        <div className="text-center bg-green-500/20 border border-green-500 rounded-xl p-6 backdrop-blur-sm">
-          <div className="text-green-400 text-2xl mb-2">🎉 Congratulations!</div>
-          <p className="text-green-300">You guessed the word in {guesses.length} tries!</p>
+        <div className="status-message status-won">
+          <div className="status-title">🎉 Congratulations!</div>
+          <div className="status-text">You guessed the word in {guesses.length} tries!</div>
         </div>
       )}
       
       {gameStatus === 'lost' && (
-        <div className="text-center bg-red-500/20 border border-red-500 rounded-xl p-6 backdrop-blur-sm">
-          <div className="text-red-400 text-2xl mb-2">😞 Game Over</div>
-          <p className="text-red-300">The word was <strong className="text-white">{targetWord}</strong></p>
+        <div className="status-message status-lost">
+          <div className="status-title">😞 Game Over</div>
+          <div className="status-text">The word was <strong>{targetWord}</strong></div>
         </div>
       )}
 
-      {/* Reset Button */}
-      <button 
-        onClick={resetGame} 
-        className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-all duration-200 hover:scale-105 shadow-lg"
-      >
+      <button className="new-game-btn" onClick={resetGame}>
         🎮 New Game
       </button>
     </div>
