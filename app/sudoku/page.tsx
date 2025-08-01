@@ -183,6 +183,62 @@ const SudokuPage: React.FC = () => {
     setNotes(Array(9).fill(null).map(() => Array(9).fill(null).map(() => [])));
   }, [generateCompleteGrid, createPuzzle, difficulty]);
 
+  // Handle cell selection
+  const handleCellClick = useCallback((row: number, col: number) => {
+    if (gameStatus !== 'playing') return;
+    setSelectedCell({ row, col });
+  }, [gameStatus]);
+
+  // Handle number input
+  const handleNumberInput = useCallback((num: number) => {
+    if (!selectedCell || gameStatus !== 'playing') return;
+    
+    const { row, col } = selectedCell;
+    if (initialGrid[row][col] !== null) return; // Can't modify initial cells
+    
+    if (showNotes) {
+      // Toggle note
+      setNotes(prev => {
+        const newNotes = prev.map(r => r.map(c => [...c]));
+        const cellNotes = newNotes[row][col];
+        const noteIndex = cellNotes.indexOf(num);
+        
+        if (noteIndex > -1) {
+          cellNotes.splice(noteIndex, 1);
+        } else {
+          cellNotes.push(num);
+          cellNotes.sort();
+        }
+        
+        return newNotes;
+      });
+    } else {
+      // Place number
+      const newGrid = grid.map(r => [...r]);
+      newGrid[row][col] = newGrid[row][col] === num ? null : num;
+      
+      // Clear notes for this cell
+      setNotes(prev => {
+        const newNotes = prev.map(r => r.map(c => [...c]));
+        newNotes[row][col] = [];
+        return newNotes;
+      });
+      
+      setGrid(newGrid);
+      
+      // Check for completion
+      if (isPuzzleComplete(newGrid)) {
+        setGameStatus('won');
+        const timeElapsed = Date.now() - startTime;
+        setStats(prev => ({
+          played: prev.played + 1,
+          won: prev.won + 1,
+          bestTime: prev.bestTime === null ? timeElapsed : Math.min(prev.bestTime, timeElapsed)
+        }));
+      }
+    }
+  }, [selectedCell, gameStatus, initialGrid, showNotes, grid, isPuzzleComplete, startTime]);
+
   return (
     <div>
       Sudoku Game
