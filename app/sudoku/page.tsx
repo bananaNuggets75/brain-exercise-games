@@ -309,10 +309,123 @@ const SudokuPage: React.FC = () => {
   }, []); // Only run once on mount
 
   return (
-    <div>
-      Sudoku Game
-    </div>
-  );
+    <div className="sudoku-container">
+      <div className="sudoku-header">
+        <h1 className="sudoku-title">SUDOKU</h1>
+        <p className="sudoku-subtitle">Fill the 9×9 grid with digits 1-9</p>
+        
+        <div className="game-controls">
+          <div className="difficulty-selector">
+            <label>Difficulty:</label>
+            <select 
+              value={difficulty} 
+              onChange={(e) => setDifficulty(e.target.value as Difficulty)}
+              disabled={gameStatus === 'playing'}
+            >
+              <option value="easy">Easy</option>
+              <option value="medium">Medium</option>
+              <option value="hard">Hard</option>
+            </select>
+          </div>
+          
+          <div className="game-info">
+            <span>Time: {formatTime(elapsedTime)}</span>
+            <span>Errors: {errors.length}</span>
+          </div>
+          
+          <div className="game-stats">
+            <span>Played: {stats.played}</span>
+            <span>Won: {stats.won}</span>
+            {stats.bestTime && <span>Best: {formatTime(stats.bestTime)}</span>}
+          </div>
+        </div>
+      </div>
+
+      <div className="game-board">
+        <div className="sudoku-grid">
+          {grid.map((row, rowIndex) =>
+            row.map((cell, colIndex) => (
+              <div
+                key={`${rowIndex}-${colIndex}`}
+                className={getCellClass(rowIndex, colIndex)}
+                onClick={() => handleCellClick(rowIndex, colIndex)}
+              >
+                {cell && <span className="cell-number">{cell}</span>}
+                {!cell && notes[rowIndex][colIndex].length > 0 && (
+                  <div className="cell-notes">
+                    {notes[rowIndex][colIndex].map(note => (
+                      <span key={note} className="note">{note}</span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
+      <div className="game-controls-bottom">
+        <div className="number-pad">
+          {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num => (
+            <button
+              key={num}
+              onClick={() => handleNumberInput(num)}
+              className="number-button"
+              disabled={gameStatus !== 'playing'}
+            >
+              {num}
+            </button>
+          ))}
+        </div>
+        
+        <div className="action-buttons">
+          <button
+            onClick={() => setShowNotes(!showNotes)}
+            className={`action-button ${showNotes ? 'active' : ''}`}
+            disabled={gameStatus !== 'playing'}
+          >
+            ✏️ Notes
+          </button>
+          
+          <button
+            onClick={() => {
+              if (selectedCell && initialGrid[selectedCell.row][selectedCell.col] === null) {
+                const newGrid = grid.map(r => [...r]);
+                newGrid[selectedCell.row][selectedCell.col] = null;
+                setGrid(newGrid);
+                
+                setNotes(prev => {
+                  const newNotes = prev.map(r => r.map(c => [...c]));
+                  newNotes[selectedCell.row][selectedCell.col] = [];
+                  return newNotes;
+                });
+              }
+            }}
+            className="action-button"
+            disabled={gameStatus !== 'playing' || !selectedCell}
+          >
+            🗑️ Clear
+          </button>
+          
+          <button
+            onClick={startNewGame}
+            className="action-button new-game"
+          >
+            🎮 New Game
+          </button>
+        </div>
+      </div>
+
+      {gameStatus === 'won' && (
+        <div className="status-message status-won">
+          <div className="status-title">🎉 Congratulations!</div>
+          <div className="status-text">
+            You completed the puzzle in {formatTime(elapsedTime)}!
+          </div>
+        </div>
+      )}
+      </div>
+      );
 };
 
 
