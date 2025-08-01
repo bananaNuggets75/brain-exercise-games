@@ -42,7 +42,56 @@ const SudokuPage: React.FC = () => {
     }
   }, [gameStatus, startTime]);
 
-  
+  // Generate a complete valid Sudoku grid
+  const generateCompleteGrid = useCallback((): SudokuGrid => {
+    const grid: SudokuGrid = Array(9).fill(null).map(() => Array(9).fill(null));
+    
+    const isValid = (grid: SudokuGrid, row: number, col: number, num: number): boolean => {
+      // Check row
+      for (let x = 0; x < 9; x++) {
+        if (grid[row][x] === num) return false;
+      }
+      
+      // Check column
+      for (let x = 0; x < 9; x++) {
+        if (grid[x][col] === num) return false;
+      }
+      
+      // Check 3x3 box
+      const startRow = Math.floor(row / 3) * 3;
+      const startCol = Math.floor(col / 3) * 3;
+      for (let i = 0; i < 3; i++) {
+        for (let j = 0; j < 3; j++) {
+          if (grid[startRow + i][startCol + j] === num) return false;
+        }
+      }
+      
+      return true;
+    };
+
+    const fillGrid = (grid: SudokuGrid): boolean => {
+      for (let row = 0; row < 9; row++) {
+        for (let col = 0; col < 9; col++) {
+          if (grid[row][col] === null) {
+            const numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9].sort(() => Math.random() - 0.5);
+            for (const num of numbers) {
+              if (isValid(grid, row, col, num)) {
+                grid[row][col] = num;
+                if (fillGrid(grid)) return true;
+                grid[row][col] = null;
+              }
+            }
+            return false;
+          }
+        }
+      }
+      return true;
+    };
+
+    fillGrid(grid);
+    return grid;
+  }, []);
+
   return (
     <div>
       Sudoku Game
