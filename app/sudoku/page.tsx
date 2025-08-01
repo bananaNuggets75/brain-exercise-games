@@ -168,6 +168,21 @@ const SudokuPage: React.FC = () => {
     return findErrors(grid).length === 0;
   }, [findErrors]);
 
+  // Initialize new game
+  const startNewGame = useCallback(() => {
+    const completeGrid = generateCompleteGrid();
+    const puzzleGrid = createPuzzle(completeGrid, difficulty);
+    
+    setGrid(puzzleGrid);
+    setInitialGrid(puzzleGrid.map(row => [...row]));
+    setSelectedCell(null);
+    setGameStatus('playing');
+    setStartTime(Date.now());
+    setElapsedTime(0);
+    setErrors([]);
+    setNotes(Array(9).fill(null).map(() => Array(9).fill(null).map(() => [])));
+  }, [generateCompleteGrid, createPuzzle, difficulty]);
+
   return (
     <div>
       Sudoku Game
