@@ -158,6 +158,16 @@ const SudokuPage: React.FC = () => {
     return errors;
   }, []);
 
+  // Check if the puzzle is complete and valid
+  const isPuzzleComplete = useCallback((grid: SudokuGrid): boolean => {
+    for (let row = 0; row < 9; row++) {
+      for (let col = 0; col < 9; col++) {
+        if (grid[row][col] === null) return false;
+      }
+    }
+    return findErrors(grid).length === 0;
+  }, [findErrors]);
+
   return (
     <div>
       Sudoku Game
