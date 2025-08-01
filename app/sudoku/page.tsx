@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 type CellValue = number | null;
 type SudokuGrid = CellValue[][];
@@ -306,7 +306,7 @@ const SudokuPage: React.FC = () => {
   // Initialize game on mount
   useEffect(() => {
     startNewGame();
-  }, []); // Only run once on mount
+  }, [startNewGame]); // Only run once on mount
 
   return (
     <div className="sudoku-container">
