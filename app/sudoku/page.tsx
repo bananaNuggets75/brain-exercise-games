@@ -423,12 +423,10 @@ const SudokuPage: React.FC = () => {
             You completed the puzzle in {formatTime(elapsedTime)}!
           </div>
         </div>
-      )}
+        )}
       </div>
       );
-};
-
-
+    };
 
 
 export default SudokuPage;
