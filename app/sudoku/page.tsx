@@ -114,6 +114,50 @@ const SudokuPage: React.FC = () => {
     return puzzle;
   }, []);
 
+  // Check for errors in the current grid
+  const findErrors = useCallback((grid: SudokuGrid): CellError[] => {
+    const errors: CellError[] = [];
+    
+    for (let row = 0; row < 9; row++) {
+      for (let col = 0; col < 9; col++) {
+        const value = grid[row][col];
+        if (value === null) continue;
+        
+        // Check for duplicates in row
+        for (let c = 0; c < 9; c++) {
+          if (c !== col && grid[row][c] === value) {
+            errors.push({ row, col });
+            break;
+          }
+        }
+        
+        // Check for duplicates in column
+        for (let r = 0; r < 9; r++) {
+          if (r !== row && grid[r][col] === value) {
+            errors.push({ row, col });
+            break;
+          }
+        }
+        
+        // Check for duplicates in 3x3 box
+        const startRow = Math.floor(row / 3) * 3;
+        const startCol = Math.floor(col / 3) * 3;
+        for (let i = 0; i < 3; i++) {
+          for (let j = 0; j < 3; j++) {
+            const r = startRow + i;
+            const c = startCol + j;
+            if ((r !== row || c !== col) && grid[r][c] === value) {
+              errors.push({ row, col });
+              break;
+            }
+          }
+        }
+      }
+    }
+    
+    return errors;
+  }, []);
+
   return (
     <div>
       Sudoku Game
