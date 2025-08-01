@@ -281,6 +281,33 @@ const SudokuPage: React.FC = () => {
     setErrors(findErrors(grid));
   }, [grid, findErrors]);
 
+  // Format time
+  const formatTime = (ms: number): string => {
+    const seconds = Math.floor(ms / 1000);
+    const minutes = Math.floor(seconds / 60);
+    return `${minutes}:${(seconds % 60).toString().padStart(2, '0')}`;
+  };
+
+  // Get cell class
+  const getCellClass = (row: number, col: number): string => {
+    const classes = ['sudoku-cell'];
+    
+    if (initialGrid[row][col] !== null) classes.push('initial');
+    if (selectedCell?.row === row && selectedCell?.col === col) classes.push('selected');
+    if (selectedCell && (selectedCell.row === row || selectedCell.col === col)) classes.push('highlighted');
+    if (selectedCell && Math.floor(selectedCell.row / 3) === Math.floor(row / 3) && 
+        Math.floor(selectedCell.col / 3) === Math.floor(col / 3)) classes.push('box-highlighted');
+    if (errors.some(e => e.row === row && e.col === col)) classes.push('error');
+    if (grid[row][col] !== null) classes.push('filled');
+    
+    return classes.join(' ');
+  };
+
+  // Initialize game on mount
+  useEffect(() => {
+    startNewGame();
+  }, []); // Only run once on mount
+
   return (
     <div>
       Sudoku Game
