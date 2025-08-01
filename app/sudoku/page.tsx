@@ -32,6 +32,17 @@ const SudokuPage: React.FC = () => {
     Array(9).fill(null).map(() => Array(9).fill(null).map(() => []))    
   );
 
+  // Timer effect
+  useEffect(() => {
+    if (gameStatus === 'playing') {
+      const interval = setInterval(() => {
+        setElapsedTime(Date.now() - startTime);
+      }, 1000);
+      return () => clearInterval(interval);
+    }
+  }, [gameStatus, startTime]);
+
+  
   return (
     <div>
       Sudoku Game
