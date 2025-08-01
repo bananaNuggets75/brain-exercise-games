@@ -92,6 +92,28 @@ const SudokuPage: React.FC = () => {
     return grid;
   }, []);
 
+  // Remove cells based on difficulty
+  const createPuzzle = useCallback((completeGrid: SudokuGrid, difficulty: Difficulty): SudokuGrid => {
+    const puzzle = completeGrid.map(row => [...row]);
+    const cellsToRemove = difficulty === 'easy' ? 40 : difficulty === 'medium' ? 50 : 60;
+    
+    const emptyCells: Array<[number, number]> = [];
+    for (let i = 0; i < 9; i++) {
+      for (let j = 0; j < 9; j++) {
+        emptyCells.push([i, j]);
+      }
+    }
+
+    // Shuffle and remove cells
+    emptyCells.sort(() => Math.random() - 0.5);
+    for (let i = 0; i < cellsToRemove && i < emptyCells.length; i++) {
+      const [row, col] = emptyCells[i];
+      puzzle[row][col] = null;
+    }
+    
+    return puzzle;
+  }, []);
+
   return (
     <div>
       Sudoku Game
