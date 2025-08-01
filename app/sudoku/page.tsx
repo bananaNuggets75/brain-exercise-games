@@ -239,6 +239,48 @@ const SudokuPage: React.FC = () => {
     }
   }, [selectedCell, gameStatus, initialGrid, showNotes, grid, isPuzzleComplete, startTime]);
 
+  // Handle keyboard input
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (gameStatus !== 'playing' || !selectedCell) return;
+      
+      const { row, col } = selectedCell;
+      
+      if (e.key >= '1' && e.key <= '9') {
+        handleNumberInput(parseInt(e.key));
+      } else if (e.key === 'Backspace' || e.key === 'Delete') {
+        if (initialGrid[row][col] === null) {
+          const newGrid = grid.map(r => [...r]);
+          newGrid[row][col] = null;
+          setGrid(newGrid);
+          
+          // Clear notes
+          setNotes(prev => {
+            const newNotes = prev.map(r => r.map(c => [...c]));
+            newNotes[row][col] = [];
+            return newNotes;
+          });
+        }
+      } else if (e.key === 'ArrowUp' && row > 0) {
+        setSelectedCell({ row: row - 1, col });
+      } else if (e.key === 'ArrowDown' && row < 8) {
+        setSelectedCell({ row: row + 1, col });
+      } else if (e.key === 'ArrowLeft' && col > 0) {
+        setSelectedCell({ row, col: col - 1 });
+      } else if (e.key === 'ArrowRight' && col < 8) {
+        setSelectedCell({ row, col: col + 1 });
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [gameStatus, selectedCell, handleNumberInput, initialGrid, grid]);
+
+  // Update errors when grid changes
+  useEffect(() => {
+    setErrors(findErrors(grid));
+  }, [grid, findErrors]);
+
   return (
     <div>
       Sudoku Game
