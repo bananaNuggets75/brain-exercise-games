@@ -304,15 +304,13 @@ const [settings, /*setSettings*/] = useState<GameSettings>({
         newNotes[row][col] = [];
         return newNotes;
       });
-
-      
       
       setGrid(newGrid);
       
       // Check for completion
       if (isPuzzleComplete(newGrid)) {
         setGameStatus('won');
-        const timeElapsed = Date.now() - startTime;
+        const timeElapsed = Date.now() - startTime + penaltyTime * 1000;
         setStats(prev => ({
           played: prev.played + 1,
           won: prev.won + 1,
@@ -320,7 +318,7 @@ const [settings, /*setSettings*/] = useState<GameSettings>({
         }));
       }
     }
-  }, [selectedCell, gameStatus, initialGrid, showNotes, grid, isPuzzleComplete, startTime]);
+  }, [selectedCell, gameStatus, initialGrid, showNotes, grid, solutionGrid, settings, incorrectAttempts, isPuzzleComplete, startTime, penaltyTime]);
 
   // Handle keyboard input
   useEffect(() => {
