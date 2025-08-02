@@ -1,10 +1,6 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
 
-// todo: maybe add timer if you input incorrectly 
-// deciding whether to accept the incorrect input or not, if not then we will only have 3 tries after you need to retry
-// add dificulty levels
-
 type CellValue = number | null;
 type SudokuGrid = CellValue[][];
 type Difficulty = 'beginner' | 'easy' | 'medium' | 'hard' | 'expert' | 'master';
@@ -43,7 +39,7 @@ const SudokuPage: React.FC = () => {
     Array(9).fill(null).map(() => Array(9).fill(null).map(() => []))
   );
   const [incorrectAttempts, setIncorrectAttempts] = useState<number>(0);
-const [settings, /*setSettings*/] = useState<GameSettings>({
+  const [settings, setSettings] = useState<GameSettings>({
     allowIncorrectInput: false,
     maxAttempts: 3,
     penaltyTime: 30
@@ -135,7 +131,7 @@ const [settings, /*setSettings*/] = useState<GameSettings>({
         emptyCells.push([i, j]);
       }
     }
-
+    
     // Shuffle and remove cells
     emptyCells.sort(() => Math.random() - 0.5);
     for (let i = 0; i < cellsToRemove && i < emptyCells.length; i++) {
@@ -145,7 +141,6 @@ const [settings, /*setSettings*/] = useState<GameSettings>({
     
     return puzzle;
   }, [getDifficultySettings]);
-
 
   // Check for errors in the current grid
   const findErrors = useCallback((grid: SudokuGrid): CellError[] => {
@@ -268,7 +263,7 @@ const [settings, /*setSettings*/] = useState<GameSettings>({
         });
         return;
       }
-
+      
       // Handle incorrect input based on settings
       if (!isCorrect && !settings.allowIncorrectInput) {
         // Shake animation
@@ -293,7 +288,7 @@ const [settings, /*setSettings*/] = useState<GameSettings>({
         }
         return;
       }
-
+      
       // Place number (either correct or allowed incorrect)
       const newGrid = grid.map(r => [...r]);
       newGrid[row][col] = num;
@@ -397,7 +392,7 @@ const [settings, /*setSettings*/] = useState<GameSettings>({
   // Initialize game on mount
   useEffect(() => {
     startNewGame();
-  }, [startNewGame]); // Only run once on mount
+  });
 
   return (
     <div className="sudoku-container">
@@ -413,15 +408,38 @@ const [settings, /*setSettings*/] = useState<GameSettings>({
               onChange={(e) => setDifficulty(e.target.value as Difficulty)}
               disabled={gameStatus === 'playing'}
             >
+              <option value="beginner">Beginner</option>
               <option value="easy">Easy</option>
               <option value="medium">Medium</option>
               <option value="hard">Hard</option>
+              <option value="expert">Expert</option>
+              <option value="master">Master</option>
             </select>
+          </div>
+          
+          <div className="settings-panel">
+            <div className="setting-item">
+              <label>
+                <input
+                  type="checkbox"
+                  checked={settings.allowIncorrectInput}
+                  onChange={(e) => setSettings(prev => ({ ...prev, allowIncorrectInput: e.target.checked }))}
+                  disabled={gameStatus === 'playing'}
+                />
+                Allow incorrect input
+              </label>
+            </div>
+            {!settings.allowIncorrectInput && (
+              <div className="attempts-info">
+                Attempts: {incorrectAttempts}/{settings.maxAttempts}
+              </div>
+            )}
           </div>
           
           <div className="game-info">
             <span>Time: {formatTime(elapsedTime)}</span>
             <span>Errors: {errors.length}</span>
+            {penaltyTime > 0 && <span className="penalty">Penalty: +{penaltyTime}s</span>}
           </div>
           
           <div className="game-stats">
@@ -512,6 +530,16 @@ const [settings, /*setSettings*/] = useState<GameSettings>({
           <div className="status-title">🎉 Congratulations!</div>
           <div className="status-text">
             You completed the puzzle in {formatTime(elapsedTime)}!
+            {penaltyTime > 0 && <div className="penalty-note">Includes {penaltyTime}s penalty time</div>}
+          </div>
+        </div>
+      )}
+
+      {gameStatus === 'failed' && (
+        <div className="status-message status-failed">
+          <div className="status-title">❌ Game Over</div>
+          <div className="status-text">
+            Too many incorrect attempts! Try a new game.
           </div>
         </div>
         )}
