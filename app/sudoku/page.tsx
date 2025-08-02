@@ -47,7 +47,7 @@ const SudokuPage: React.FC = () => {
   const [shakingCell, setShakingCell] = useState<{ row: number; col: number } | null>(null);
   const [penaltyTime, setPenaltyTime] = useState<number>(0);
   const [showDifficultyModal, setShowDifficultyModal] = useState<boolean>(false);
-  //const [showGameOverModal, setShowGameOverModal] = useState<boolean>(false);
+  const [showGameOverModal, setShowGameOverModal] = useState<boolean>(false);
   const [pendingDifficulty, setPendingDifficulty] = useState<Difficulty | null>(null);
   
 
@@ -285,6 +285,7 @@ const SudokuPage: React.FC = () => {
         // Check if max attempts reached
         if (newAttempts >= settings.maxAttempts) {
           setGameStatus('failed');
+          setShowGameOverModal(true);
           setStats(prev => ({
             played: prev.played + 1,
             won: prev.won,
