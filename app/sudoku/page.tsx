@@ -3,7 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 
 type CellValue = number | null;
 type SudokuGrid = CellValue[][];
-type Difficulty = 'easy' | 'medium' | 'hard';
+type Difficulty = 'beginner' | 'easy' | 'medium' | 'hard' | 'expert' | 'master';
 
 interface GameStats {
   played: number;
@@ -16,31 +16,51 @@ interface CellError {
   col: number;
 }
 
+interface GameSettings {
+  allowIncorrectInput: boolean;
+  maxAttempts: number;
+  penaltyTime: number; // seconds to add for incorrect input
+}
+
 const SudokuPage: React.FC = () => {
   // Game state
-  const [grid, setGrid] = useState<SudokuGrid>(() => Array(9).fill(null).map(() => Array(9).fill(null)));
-  const [initialGrid, setInitialGrid] = useState<SudokuGrid>(() => Array(9).fill(null).map(() => Array(9).fill(null)));
+  const [grid, setGrid] = useState<SudokuGrid>(Array(9).fill(null).map(() => Array(9).fill(null)));
+  const [initialGrid, setInitialGrid] = useState<SudokuGrid>(Array(9).fill(null).map(() => Array(9).fill(null)));
+  const [solutionGrid, setSolutionGrid] = useState<SudokuGrid>(Array(9).fill(null).map(() => Array(9).fill(null)));
+  const [isClient, setIsClient] = useState(false);
   const [selectedCell, setSelectedCell] = useState<{ row: number; col: number } | null>(null);
   const [difficulty, setDifficulty] = useState<Difficulty>('medium');
-  const [gameStatus, setGameStatus] = useState<'playing' | 'won' | 'paused'>('playing');
+  const [gameStatus, setGameStatus] = useState<'playing' | 'won' | 'failed'>('playing');
   const [startTime, setStartTime] = useState<number>(Date.now());
   const [elapsedTime, setElapsedTime] = useState<number>(0);
   const [stats, setStats] = useState<GameStats>({ played: 0, won: 0, bestTime: null });
   const [errors, setErrors] = useState<CellError[]>([]);
   const [showNotes, setShowNotes] = useState<boolean>(false);
-  const [notes, setNotes] = useState<number[][][]>(() => 
-    Array(9).fill(null).map(() => Array(9).fill(null).map(() => []))    
-  );
+  const [notes, setNotes] = useState<number[][][]>(Array(9).fill(null).map(() => Array(9).fill(null).map(() => [])));
+  const [incorrectAttempts, setIncorrectAttempts] = useState<number>(0);
+  const [settings, setSettings] = useState<GameSettings>({
+    allowIncorrectInput: false,
+    maxAttempts: 3,
+    penaltyTime: 30
+  });
+  const [shakingCell, setShakingCell] = useState<{ row: number; col: number } | null>(null);
+  const [penaltyTime, setPenaltyTime] = useState<number>(0);
+  const [showDifficultyModal, setShowDifficultyModal] = useState<boolean>(false);
+  const [showGameOverModal, setShowGameOverModal] = useState<boolean>(false);
+  const [pendingDifficulty, setPendingDifficulty] = useState<Difficulty | null>(null);
+  
 
   // Timer effect
   useEffect(() => {
     if (gameStatus === 'playing') {
       const interval = setInterval(() => {
-        setElapsedTime(Date.now() - startTime);
+        setElapsedTime(Date.now() - startTime + penaltyTime * 1000);
       }, 1000);
       return () => clearInterval(interval);
     }
-  }, [gameStatus, startTime]);
+    setIsClient(true);
+    startNewGame();
+  }, [gameStatus, startTime, penaltyTime]);
 
   // Generate a complete valid Sudoku grid
   const generateCompleteGrid = useCallback((): SudokuGrid => {
@@ -92,10 +112,23 @@ const SudokuPage: React.FC = () => {
     return grid;
   }, []);
 
+  // Get difficulty settings
+  const getDifficultySettings = useCallback((difficulty: Difficulty) => {
+    const settings = {
+      beginner: { cellsToRemove: 30, description: 'Very Easy' },
+      easy: { cellsToRemove: 40, description: 'Easy' },
+      medium: { cellsToRemove: 50, description: 'Medium' },
+      hard: { cellsToRemove: 58, description: 'Hard' },
+      expert: { cellsToRemove: 64, description: 'Expert' },
+      master: { cellsToRemove: 70, description: 'Master' }
+    };
+    return settings[difficulty];
+  }, []);
+
   // Remove cells based on difficulty
   const createPuzzle = useCallback((completeGrid: SudokuGrid, difficulty: Difficulty): SudokuGrid => {
     const puzzle = completeGrid.map(row => [...row]);
-    const cellsToRemove = difficulty === 'easy' ? 40 : difficulty === 'medium' ? 50 : 60;
+    const { cellsToRemove } = getDifficultySettings(difficulty);
     
     const emptyCells: Array<[number, number]> = [];
     for (let i = 0; i < 9; i++) {
@@ -103,7 +136,7 @@ const SudokuPage: React.FC = () => {
         emptyCells.push([i, j]);
       }
     }
-
+    
     // Shuffle and remove cells
     emptyCells.sort(() => Math.random() - 0.5);
     for (let i = 0; i < cellsToRemove && i < emptyCells.length; i++) {
@@ -112,7 +145,7 @@ const SudokuPage: React.FC = () => {
     }
     
     return puzzle;
-  }, []);
+  }, [getDifficultySettings]);
 
   // Check for errors in the current grid
   const findErrors = useCallback((grid: SudokuGrid): CellError[] => {
@@ -175,11 +208,15 @@ const SudokuPage: React.FC = () => {
     
     setGrid(puzzleGrid);
     setInitialGrid(puzzleGrid.map(row => [...row]));
+    setSolutionGrid(completeGrid);
     setSelectedCell(null);
     setGameStatus('playing');
     setStartTime(Date.now());
     setElapsedTime(0);
     setErrors([]);
+    setIncorrectAttempts(0);
+    setPenaltyTime(0);
+    setShakingCell(null);
     setNotes(Array(9).fill(null).map(() => Array(9).fill(null).map(() => [])));
   }, [generateCompleteGrid, createPuzzle, difficulty]);
 
@@ -213,9 +250,55 @@ const SudokuPage: React.FC = () => {
         return newNotes;
       });
     } else {
-      // Place number
+      // Check if the move is correct
+      const isCorrect = solutionGrid[row][col] === num;
+      const currentValue = grid[row][col];
+      
+      // If placing the same number, remove it
+      if (currentValue === num) {
+        const newGrid = grid.map(r => [...r]);
+        newGrid[row][col] = null;
+        setGrid(newGrid);
+        
+        // Clear notes for this cell
+        setNotes(prev => {
+          const newNotes = prev.map(r => r.map(c => [...c]));
+          newNotes[row][col] = [];
+          return newNotes;
+        });
+        return;
+      }
+
+      
+      // Handle incorrect input based on settings
+      if (!isCorrect && !settings.allowIncorrectInput) {
+        // Shake animation
+        setShakingCell({ row, col });
+        setTimeout(() => setShakingCell(null), 600);
+        
+        // Increment incorrect attempts
+        const newAttempts = incorrectAttempts + 1;
+        setIncorrectAttempts(newAttempts);
+        
+        // Add penalty time
+        setPenaltyTime(prev => prev + settings.penaltyTime);
+        
+        // Check if max attempts reached
+        if (newAttempts >= settings.maxAttempts) {
+          setGameStatus('failed');
+          setShowGameOverModal(true);
+          setStats(prev => ({
+            played: prev.played + 1,
+            won: prev.won,
+            bestTime: prev.bestTime
+          }));
+        }
+        return;
+      }
+      
+      // Place number (either correct or allowed incorrect)
       const newGrid = grid.map(r => [...r]);
-      newGrid[row][col] = newGrid[row][col] === num ? null : num;
+      newGrid[row][col] = num;
       
       // Clear notes for this cell
       setNotes(prev => {
@@ -229,7 +312,7 @@ const SudokuPage: React.FC = () => {
       // Check for completion
       if (isPuzzleComplete(newGrid)) {
         setGameStatus('won');
-        const timeElapsed = Date.now() - startTime;
+        const timeElapsed = Date.now() - startTime + penaltyTime * 1000;
         setStats(prev => ({
           played: prev.played + 1,
           won: prev.won + 1,
@@ -237,7 +320,7 @@ const SudokuPage: React.FC = () => {
         }));
       }
     }
-  }, [selectedCell, gameStatus, initialGrid, showNotes, grid, isPuzzleComplete, startTime]);
+  }, [selectedCell, gameStatus, initialGrid, showNotes, grid, solutionGrid, settings, incorrectAttempts, isPuzzleComplete, startTime, penaltyTime]);
 
   // Handle keyboard input
   useEffect(() => {
@@ -299,6 +382,16 @@ const SudokuPage: React.FC = () => {
         Math.floor(selectedCell.col / 3) === Math.floor(col / 3)) classes.push('box-highlighted');
     if (errors.some(e => e.row === row && e.col === col)) classes.push('error');
     if (grid[row][col] !== null) classes.push('filled');
+    if (shakingCell?.row === row && shakingCell?.col === col) classes.push('shaking');
+    
+    // Add correctness classes
+    if (grid[row][col] !== null && initialGrid[row][col] === null) {
+      if (solutionGrid[row][col] === grid[row][col]) {
+        classes.push('correct-input');
+      } else if (settings.allowIncorrectInput) {
+        classes.push('incorrect-input');
+      }
+    }
     
     return classes.join(' ');
   };
@@ -306,7 +399,7 @@ const SudokuPage: React.FC = () => {
   // Initialize game on mount
   useEffect(() => {
     startNewGame();
-  }, [startNewGame]); // Only run once on mount
+  },[isClient]);
 
   return (
     <div className="sudoku-container">
@@ -319,18 +412,48 @@ const SudokuPage: React.FC = () => {
             <label>Difficulty:</label>
             <select 
               value={difficulty} 
-              onChange={(e) => setDifficulty(e.target.value as Difficulty)}
-              disabled={gameStatus === 'playing'}
+              onChange={(e) => {
+                const newDifficulty = e.target.value as Difficulty;
+                if (gameStatus === 'playing') {
+                  setPendingDifficulty(newDifficulty);
+                  setShowDifficultyModal(true);
+                } else {
+                  setDifficulty(newDifficulty);
+                }
+              }}
             >
+              <option value="beginner">Beginner</option>
               <option value="easy">Easy</option>
               <option value="medium">Medium</option>
               <option value="hard">Hard</option>
+              <option value="expert">Expert</option>
+              <option value="master">Master</option>
             </select>
+          </div>
+          
+          <div className="settings-panel">
+            <div className="setting-item">
+              <label>
+                <input
+                  type="checkbox"
+                  checked={settings.allowIncorrectInput}
+                  onChange={(e) => setSettings(prev => ({ ...prev, allowIncorrectInput: e.target.checked }))}
+                  disabled={gameStatus === 'playing'}
+                />
+                Allow incorrect input
+              </label>
+            </div>
+            {!settings.allowIncorrectInput && (
+              <div className="attempts-info">
+                Attempts: {incorrectAttempts}/{settings.maxAttempts}
+              </div>
+            )}
           </div>
           
           <div className="game-info">
             <span>Time: {formatTime(elapsedTime)}</span>
             <span>Errors: {errors.length}</span>
+            {penaltyTime > 0 && <span className="penalty">Penalty: +{penaltyTime}s</span>}
           </div>
           
           <div className="game-stats">
@@ -421,8 +544,71 @@ const SudokuPage: React.FC = () => {
           <div className="status-title">🎉 Congratulations!</div>
           <div className="status-text">
             You completed the puzzle in {formatTime(elapsedTime)}!
+            {penaltyTime > 0 && <div className="penalty-note">Includes {penaltyTime}s penalty time</div>}
           </div>
         </div>
+      )}
+
+      {gameStatus === 'failed' && (
+        <div className="status-message status-failed">
+          <div className="status-title">❌ Game Over</div>
+          <div className="status-text">
+            Too many incorrect attempts! Try a new game.
+          </div>
+        </div>
+        )}
+
+        {showDifficultyModal && (
+          <div className="modal-overlay">
+            <div className="modal">
+              <h3>Change Difficulty?</h3>
+              <p>This will start a new game. Your current progress will be lost.</p>
+              <div className="modal-buttons">
+                <button 
+                  onClick={() => {
+                    if (pendingDifficulty) {
+                      setDifficulty(pendingDifficulty);
+                      startNewGame();
+                    }
+                    setShowDifficultyModal(false);
+                    setPendingDifficulty(null);
+                  }}
+                  className="modal-button confirm"
+                >
+                  Okay
+                </button>
+                <button 
+                  onClick={() => {
+                    setShowDifficultyModal(false);
+                    setPendingDifficulty(null);
+                  }}
+                  className="modal-button cancel"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+        {/* Game Over Modal */}
+        {showGameOverModal && (
+          <div className="modal-overlay">
+            <div className="modal">
+              <h3>❌ Game Over</h3>
+              <p>Too many incorrect attempts!</p>
+              <div className="modal-buttons">
+                <button 
+                  onClick={() => {
+                    setShowGameOverModal(false);
+                    startNewGame();
+                  }}
+                  className="modal-button confirm"
+                >
+                  New Game
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
       );
