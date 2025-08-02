@@ -47,7 +47,7 @@ const SudokuPage: React.FC = () => {
   const [shakingCell, setShakingCell] = useState<{ row: number; col: number } | null>(null);
   const [penaltyTime, setPenaltyTime] = useState<number>(0);
   const [showDifficultyModal, setShowDifficultyModal] = useState<boolean>(false);
-  const [showGameOverModal, setShowGameOverModal] = useState<boolean>(false);
+  const [/*showGameOverModal,*/, setShowGameOverModal] = useState<boolean>(false);
   const [pendingDifficulty, setPendingDifficulty] = useState<Difficulty | null>(null);
   
 
@@ -555,6 +555,39 @@ const SudokuPage: React.FC = () => {
             Too many incorrect attempts! Try a new game.
           </div>
         </div>
+        )}
+
+        {showDifficultyModal && (
+          <div className="modal-overlay">
+            <div className="modal">
+              <h3>Change Difficulty?</h3>
+              <p>This will start a new game. Your current progress will be lost.</p>
+              <div className="modal-buttons">
+                <button 
+                  onClick={() => {
+                    if (pendingDifficulty) {
+                      setDifficulty(pendingDifficulty);
+                      startNewGame();
+                    }
+                    setShowDifficultyModal(false);
+                    setPendingDifficulty(null);
+                  }}
+                  className="modal-button confirm"
+                >
+                  Okay
+                </button>
+                <button 
+                  onClick={() => {
+                    setShowDifficultyModal(false);
+                    setPendingDifficulty(null);
+                  }}
+                  className="modal-button cancel"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
       );
