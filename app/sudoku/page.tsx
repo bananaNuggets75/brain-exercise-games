@@ -24,9 +24,10 @@ interface GameSettings {
 
 const SudokuPage: React.FC = () => {
   // Game state
-  const [grid, setGrid] = useState<SudokuGrid>(() => Array(9).fill(null).map(() => Array(9).fill(null)));
-  const [initialGrid, setInitialGrid] = useState<SudokuGrid>(() => Array(9).fill(null).map(() => Array(9).fill(null)));
-  const [solutionGrid, setSolutionGrid] = useState<SudokuGrid>(() => Array(9).fill(null).map(() => Array(9).fill(null)));
+  const [grid, setGrid] = useState<SudokuGrid>(Array(9).fill(null).map(() => Array(9).fill(null)));
+  const [initialGrid, setInitialGrid] = useState<SudokuGrid>(Array(9).fill(null).map(() => Array(9).fill(null)));
+  const [solutionGrid, setSolutionGrid] = useState<SudokuGrid>(Array(9).fill(null).map(() => Array(9).fill(null)));
+  const [isClient, setIsClient] = useState(false);
   const [selectedCell, setSelectedCell] = useState<{ row: number; col: number } | null>(null);
   const [difficulty, setDifficulty] = useState<Difficulty>('medium');
   const [gameStatus, setGameStatus] = useState<'playing' | 'won' | 'failed'>('playing');
@@ -47,7 +48,7 @@ const SudokuPage: React.FC = () => {
   const [shakingCell, setShakingCell] = useState<{ row: number; col: number } | null>(null);
   const [penaltyTime, setPenaltyTime] = useState<number>(0);
   const [showDifficultyModal, setShowDifficultyModal] = useState<boolean>(false);
-  const [/*showGameOverModal,*/, setShowGameOverModal] = useState<boolean>(false);
+  const [showGameOverModal, setShowGameOverModal] = useState<boolean>(false);
   const [pendingDifficulty, setPendingDifficulty] = useState<Difficulty | null>(null);
   
 
@@ -59,6 +60,8 @@ const SudokuPage: React.FC = () => {
       }, 1000);
       return () => clearInterval(interval);
     }
+    setIsClient(true);
+    startNewGame();
   }, [gameStatus, startTime, penaltyTime]);
 
   // Generate a complete valid Sudoku grid
@@ -398,7 +401,7 @@ const SudokuPage: React.FC = () => {
   // Initialize game on mount
   useEffect(() => {
     startNewGame();
-  },[]);
+  },[isClient]);
 
   return (
     <div className="sudoku-container">
@@ -584,6 +587,26 @@ const SudokuPage: React.FC = () => {
                   className="modal-button cancel"
                 >
                   Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+        {/* Game Over Modal */}
+        {showGameOverModal && (
+          <div className="modal-overlay">
+            <div className="modal">
+              <h3>❌ Game Over</h3>
+              <p>Too many incorrect attempts!</p>
+              <div className="modal-buttons">
+                <button 
+                  onClick={() => {
+                    setShowGameOverModal(false);
+                    startNewGame();
+                  }}
+                  className="modal-button confirm"
+                >
+                  New Game
                 </button>
               </div>
             </div>
