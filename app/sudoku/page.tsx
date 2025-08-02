@@ -42,7 +42,7 @@ const SudokuPage: React.FC = () => {
   const [notes, setNotes] = useState<number[][][]>(() => 
     Array(9).fill(null).map(() => Array(9).fill(null).map(() => []))
   );
-  const [/*incorrectAttempts*/, setIncorrectAttempts] = useState<number>(0);
+  const [incorrectAttempts, setIncorrectAttempts] = useState<number>(0);
 const [settings, /*setSettings*/] = useState<GameSettings>({
     allowIncorrectInput: false,
     maxAttempts: 3,
@@ -251,7 +251,7 @@ const [settings, /*setSettings*/] = useState<GameSettings>({
       });
     } else {
       // Check if the move is correct
-      //const isCorrect = solutionGrid[row][col] === num;
+      const isCorrect = solutionGrid[row][col] === num;
       const currentValue = grid[row][col];
       
       // If placing the same number, remove it
@@ -266,6 +266,31 @@ const [settings, /*setSettings*/] = useState<GameSettings>({
           newNotes[row][col] = [];
           return newNotes;
         });
+        return;
+      }
+
+      // Handle incorrect input based on settings
+      if (!isCorrect && !settings.allowIncorrectInput) {
+        // Shake animation
+        setShakingCell({ row, col });
+        setTimeout(() => setShakingCell(null), 600);
+        
+        // Increment incorrect attempts
+        const newAttempts = incorrectAttempts + 1;
+        setIncorrectAttempts(newAttempts);
+        
+        // Add penalty time
+        setPenaltyTime(prev => prev + settings.penaltyTime);
+        
+        // Check if max attempts reached
+        if (newAttempts >= settings.maxAttempts) {
+          setGameStatus('failed');
+          setStats(prev => ({
+            played: prev.played + 1,
+            won: prev.won,
+            bestTime: prev.bestTime
+          }));
+        }
         return;
       }
 
