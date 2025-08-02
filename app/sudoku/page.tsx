@@ -20,17 +20,17 @@ interface CellError {
   col: number;
 }
 
-interface GameSettings {
-  allowIncorrectInput: boolean;
-  maxAttempts: number;
-  penaltyTime: number; // seconds to add for incorrect input
-}
+//interface GameSettings {
+  //allowIncorrectInput: boolean;
+  //maxAttempts: number;
+  //penaltyTime: number; // seconds to add for incorrect input
+//}
 
 const SudokuPage: React.FC = () => {
   // Game state
   const [grid, setGrid] = useState<SudokuGrid>(() => Array(9).fill(null).map(() => Array(9).fill(null)));
   const [initialGrid, setInitialGrid] = useState<SudokuGrid>(() => Array(9).fill(null).map(() => Array(9).fill(null)));
-  const [solutionGrid, setSolutionGrid] = useState<SudokuGrid>(() => Array(9).fill(null).map(() => Array(9).fill(null)));
+  //const [solutionGrid, setSolutionGrid] = useState<SudokuGrid>(() => Array(9).fill(null).map(() => Array(9).fill(null)));
   const [selectedCell, setSelectedCell] = useState<{ row: number; col: number } | null>(null);
   const [difficulty, setDifficulty] = useState<Difficulty>('medium');
   const [gameStatus, setGameStatus] = useState<'playing' | 'won' | 'failed'>('playing');
@@ -42,14 +42,14 @@ const SudokuPage: React.FC = () => {
   const [notes, setNotes] = useState<number[][][]>(() => 
     Array(9).fill(null).map(() => Array(9).fill(null).map(() => []))
   );
-  const [incorrectAttempts, setIncorrectAttempts] = useState<number>(0);
-  const [settings, setSettings] = useState<GameSettings>({
-    allowIncorrectInput: false,
-    maxAttempts: 3,
-    penaltyTime: 30
-  });
-  const [shakingCell, setShakingCell] = useState<{ row: number; col: number } | null>(null);
-  const [penaltyTime, setPenaltyTime] = useState<number>(0);
+  //const [incorrectAttempts, setIncorrectAttempts] = useState<number>(0);
+  //const [settings, setSettings] = useState<GameSettings>({
+    //allowIncorrectInput: false,
+    //maxAttempts: 3,
+    //penaltyTime: 30
+  //});
+  //const [shakingCell, setShakingCell] = useState<{ row: number; col: number } | null>(null);
+  //const [penaltyTime, setPenaltyTime] = useState<number>(0);
 
   // Timer effect
   useEffect(() => {
@@ -111,10 +111,23 @@ const SudokuPage: React.FC = () => {
     return grid;
   }, []);
 
+  // Get difficulty settings
+  const getDifficultySettings = useCallback((difficulty: Difficulty) => {
+    const settings = {
+      beginner: { cellsToRemove: 30, description: 'Very Easy' },
+      easy: { cellsToRemove: 40, description: 'Easy' },
+      medium: { cellsToRemove: 50, description: 'Medium' },
+      hard: { cellsToRemove: 58, description: 'Hard' },
+      expert: { cellsToRemove: 64, description: 'Expert' },
+      master: { cellsToRemove: 70, description: 'Master' }
+    };
+    return settings[difficulty];
+  }, []);
+
   // Remove cells based on difficulty
   const createPuzzle = useCallback((completeGrid: SudokuGrid, difficulty: Difficulty): SudokuGrid => {
     const puzzle = completeGrid.map(row => [...row]);
-    const cellsToRemove = difficulty === 'easy' ? 40 : difficulty === 'medium' ? 50 : 60;
+    const { cellsToRemove } = getDifficultySettings(difficulty);
     
     const emptyCells: Array<[number, number]> = [];
     for (let i = 0; i < 9; i++) {
