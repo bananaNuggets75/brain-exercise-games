@@ -1,9 +1,13 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
 
+// todo: maybe add timer if you input incorrectly 
+// deciding whether to accept the incorrect input or not, if not then we will only have 3 tries after you need to retry
+// add dificulty levels
+
 type CellValue = number | null;
 type SudokuGrid = CellValue[][];
-type Difficulty = 'easy' | 'medium' | 'hard';
+type Difficulty = 'beginner' | 'easy' | 'medium' | 'hard' | 'expert' | 'master';
 
 interface GameStats {
   played: number;
@@ -16,21 +20,36 @@ interface CellError {
   col: number;
 }
 
+interface GameSettings {
+  allowIncorrectInput: boolean;
+  maxAttempts: number;
+  penaltyTime: number; // seconds to add for incorrect input
+}
+
 const SudokuPage: React.FC = () => {
   // Game state
   const [grid, setGrid] = useState<SudokuGrid>(() => Array(9).fill(null).map(() => Array(9).fill(null)));
   const [initialGrid, setInitialGrid] = useState<SudokuGrid>(() => Array(9).fill(null).map(() => Array(9).fill(null)));
+  const [solutionGrid, setSolutionGrid] = useState<SudokuGrid>(() => Array(9).fill(null).map(() => Array(9).fill(null)));
   const [selectedCell, setSelectedCell] = useState<{ row: number; col: number } | null>(null);
   const [difficulty, setDifficulty] = useState<Difficulty>('medium');
-  const [gameStatus, setGameStatus] = useState<'playing' | 'won' | 'paused'>('playing');
+  const [gameStatus, setGameStatus] = useState<'playing' | 'won' | 'failed'>('playing');
   const [startTime, setStartTime] = useState<number>(Date.now());
   const [elapsedTime, setElapsedTime] = useState<number>(0);
   const [stats, setStats] = useState<GameStats>({ played: 0, won: 0, bestTime: null });
   const [errors, setErrors] = useState<CellError[]>([]);
   const [showNotes, setShowNotes] = useState<boolean>(false);
   const [notes, setNotes] = useState<number[][][]>(() => 
-    Array(9).fill(null).map(() => Array(9).fill(null).map(() => []))    
+    Array(9).fill(null).map(() => Array(9).fill(null).map(() => []))
   );
+  const [incorrectAttempts, setIncorrectAttempts] = useState<number>(0);
+  const [settings, setSettings] = useState<GameSettings>({
+    allowIncorrectInput: false,
+    maxAttempts: 3,
+    penaltyTime: 30
+  });
+  const [shakingCell, setShakingCell] = useState<{ row: number; col: number } | null>(null);
+  const [penaltyTime, setPenaltyTime] = useState<number>(0);
 
   // Timer effect
   useEffect(() => {
