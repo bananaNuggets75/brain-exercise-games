@@ -36,9 +36,7 @@ const SudokuPage: React.FC = () => {
   const [stats, setStats] = useState<GameStats>({ played: 0, won: 0, bestTime: null });
   const [errors, setErrors] = useState<CellError[]>([]);
   const [showNotes, setShowNotes] = useState<boolean>(false);
-  const [notes, setNotes] = useState<number[][][]>(() => 
-    Array(9).fill(null).map(() => Array(9).fill(null).map(() => []))
-  );
+  const [notes, setNotes] = useState<number[][][]>(Array(9).fill(null).map(() => Array(9).fill(null).map(() => [])));
   const [incorrectAttempts, setIncorrectAttempts] = useState<number>(0);
   const [settings, setSettings] = useState<GameSettings>({
     allowIncorrectInput: false,
