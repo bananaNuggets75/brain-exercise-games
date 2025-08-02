@@ -20,17 +20,17 @@ interface CellError {
   col: number;
 }
 
-//interface GameSettings {
-  //allowIncorrectInput: boolean;
-  //maxAttempts: number;
-  //penaltyTime: number; // seconds to add for incorrect input
-//}
+interface GameSettings {
+  allowIncorrectInput: boolean;
+  maxAttempts: number;
+  penaltyTime: number; // seconds to add for incorrect input
+}
 
 const SudokuPage: React.FC = () => {
   // Game state
   const [grid, setGrid] = useState<SudokuGrid>(() => Array(9).fill(null).map(() => Array(9).fill(null)));
   const [initialGrid, setInitialGrid] = useState<SudokuGrid>(() => Array(9).fill(null).map(() => Array(9).fill(null)));
-  //const [solutionGrid, setSolutionGrid] = useState<SudokuGrid>(() => Array(9).fill(null).map(() => Array(9).fill(null)));
+  const [solutionGrid, setSolutionGrid] = useState<SudokuGrid>(() => Array(9).fill(null).map(() => Array(9).fill(null)));
   const [selectedCell, setSelectedCell] = useState<{ row: number; col: number } | null>(null);
   const [difficulty, setDifficulty] = useState<Difficulty>('medium');
   const [gameStatus, setGameStatus] = useState<'playing' | 'won' | 'failed'>('playing');
@@ -42,24 +42,24 @@ const SudokuPage: React.FC = () => {
   const [notes, setNotes] = useState<number[][][]>(() => 
     Array(9).fill(null).map(() => Array(9).fill(null).map(() => []))
   );
-  //const [incorrectAttempts, setIncorrectAttempts] = useState<number>(0);
-  //const [settings, setSettings] = useState<GameSettings>({
-    //allowIncorrectInput: false,
-    //maxAttempts: 3,
-    //penaltyTime: 30
-  //});
-  //const [shakingCell, setShakingCell] = useState<{ row: number; col: number } | null>(null);
-  //const [penaltyTime, setPenaltyTime] = useState<number>(0);
+  const [/*incorrectAttempts*/, setIncorrectAttempts] = useState<number>(0);
+const [settings, /*setSettings*/] = useState<GameSettings>({
+    allowIncorrectInput: false,
+    maxAttempts: 3,
+    penaltyTime: 30
+  });
+  const [shakingCell, setShakingCell] = useState<{ row: number; col: number } | null>(null);
+  const [penaltyTime, setPenaltyTime] = useState<number>(0);
 
   // Timer effect
   useEffect(() => {
     if (gameStatus === 'playing') {
       const interval = setInterval(() => {
-        setElapsedTime(Date.now() - startTime);
+        setElapsedTime(Date.now() - startTime + penaltyTime * 1000);
       }, 1000);
       return () => clearInterval(interval);
     }
-  }, [gameStatus, startTime]);
+  }, [gameStatus, startTime, penaltyTime]);
 
   // Generate a complete valid Sudoku grid
   const generateCompleteGrid = useCallback((): SudokuGrid => {
@@ -144,7 +144,8 @@ const SudokuPage: React.FC = () => {
     }
     
     return puzzle;
-  }, []);
+  }, [getDifficultySettings]);
+
 
   // Check for errors in the current grid
   const findErrors = useCallback((grid: SudokuGrid): CellError[] => {
@@ -207,11 +208,15 @@ const SudokuPage: React.FC = () => {
     
     setGrid(puzzleGrid);
     setInitialGrid(puzzleGrid.map(row => [...row]));
+    setSolutionGrid(completeGrid);
     setSelectedCell(null);
     setGameStatus('playing');
     setStartTime(Date.now());
     setElapsedTime(0);
     setErrors([]);
+    setIncorrectAttempts(0);
+    setPenaltyTime(0);
+    setShakingCell(null);
     setNotes(Array(9).fill(null).map(() => Array(9).fill(null).map(() => [])));
   }, [generateCompleteGrid, createPuzzle, difficulty]);
 
@@ -331,6 +336,16 @@ const SudokuPage: React.FC = () => {
         Math.floor(selectedCell.col / 3) === Math.floor(col / 3)) classes.push('box-highlighted');
     if (errors.some(e => e.row === row && e.col === col)) classes.push('error');
     if (grid[row][col] !== null) classes.push('filled');
+    if (shakingCell?.row === row && shakingCell?.col === col) classes.push('shaking');
+    
+    // Add correctness classes
+    if (grid[row][col] !== null && initialGrid[row][col] === null) {
+      if (solutionGrid[row][col] === grid[row][col]) {
+        classes.push('correct-input');
+      } else if (settings.allowIncorrectInput) {
+        classes.push('incorrect-input');
+      }
+    }
     
     return classes.join(' ');
   };
