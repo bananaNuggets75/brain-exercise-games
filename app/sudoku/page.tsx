@@ -250,9 +250,28 @@ const [settings, /*setSettings*/] = useState<GameSettings>({
         return newNotes;
       });
     } else {
-      // Place number
+      // Check if the move is correct
+      //const isCorrect = solutionGrid[row][col] === num;
+      const currentValue = grid[row][col];
+      
+      // If placing the same number, remove it
+      if (currentValue === num) {
+        const newGrid = grid.map(r => [...r]);
+        newGrid[row][col] = null;
+        setGrid(newGrid);
+        
+        // Clear notes for this cell
+        setNotes(prev => {
+          const newNotes = prev.map(r => r.map(c => [...c]));
+          newNotes[row][col] = [];
+          return newNotes;
+        });
+        return;
+      }
+
+      // Place number (either correct or allowed incorrect)
       const newGrid = grid.map(r => [...r]);
-      newGrid[row][col] = newGrid[row][col] === num ? null : num;
+      newGrid[row][col] = num;
       
       // Clear notes for this cell
       setNotes(prev => {
@@ -260,6 +279,8 @@ const [settings, /*setSettings*/] = useState<GameSettings>({
         newNotes[row][col] = [];
         return newNotes;
       });
+
+      
       
       setGrid(newGrid);
       
