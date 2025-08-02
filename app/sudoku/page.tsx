@@ -46,6 +46,10 @@ const SudokuPage: React.FC = () => {
   });
   const [shakingCell, setShakingCell] = useState<{ row: number; col: number } | null>(null);
   const [penaltyTime, setPenaltyTime] = useState<number>(0);
+  const [showDifficultyModal, setShowDifficultyModal] = useState<boolean>(false);
+  //const [showGameOverModal, setShowGameOverModal] = useState<boolean>(false);
+  const [pendingDifficulty, setPendingDifficulty] = useState<Difficulty | null>(null);
+  
 
   // Timer effect
   useEffect(() => {
@@ -263,6 +267,7 @@ const SudokuPage: React.FC = () => {
         });
         return;
       }
+
       
       // Handle incorrect input based on settings
       if (!isCorrect && !settings.allowIncorrectInput) {
@@ -392,7 +397,7 @@ const SudokuPage: React.FC = () => {
   // Initialize game on mount
   useEffect(() => {
     startNewGame();
-  });
+  },[]);
 
   return (
     <div className="sudoku-container">
@@ -405,8 +410,15 @@ const SudokuPage: React.FC = () => {
             <label>Difficulty:</label>
             <select 
               value={difficulty} 
-              onChange={(e) => setDifficulty(e.target.value as Difficulty)}
-              disabled={gameStatus === 'playing'}
+              onChange={(e) => {
+                const newDifficulty = e.target.value as Difficulty;
+                if (gameStatus === 'playing') {
+                  setPendingDifficulty(newDifficulty);
+                  setShowDifficultyModal(true);
+                } else {
+                  setDifficulty(newDifficulty);
+                }
+              }}
             >
               <option value="beginner">Beginner</option>
               <option value="easy">Easy</option>
