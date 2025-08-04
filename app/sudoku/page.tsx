@@ -48,6 +48,7 @@ const SudokuPage: React.FC = () => {
   const [showDifficultyModal, setShowDifficultyModal] = useState<boolean>(false);
   const [showGameOverModal, setShowGameOverModal] = useState<boolean>(false);
   const [pendingDifficulty, setPendingDifficulty] = useState<Difficulty | null>(null);
+  const [showNewGameModal, setShowNewGameModal] = useState<boolean>(false);
   
 
   // Timer effect
@@ -531,7 +532,7 @@ const SudokuPage: React.FC = () => {
           </button>
           
           <button
-            onClick={startNewGame}
+            onClick={()=> setShowNewGameModal(true)}
             className="action-button new-game"
           >
             🎮 New Game
@@ -610,6 +611,37 @@ const SudokuPage: React.FC = () => {
             </div>
           </div>
         )}
+
+        {showNewGameModal && (
+          <div className="modal-overlay">
+            <div className="modal">
+              <h3>Start New Game</h3>
+              <p>Select a difficulty to start a new puzzle:</p>
+              <div className="difficulty-options">
+                {(['beginner', 'easy', 'medium', 'hard', 'expert', 'master'] as Difficulty[]).map(level => (
+                  <button
+                    key={level}
+                    onClick={() => {
+                      setDifficulty(level);
+                      setShowNewGameModal(false);
+                      startNewGame();
+                    }}
+                    className="modal-button confirm"
+                  >
+                    {level.charAt(0).toUpperCase() + level.slice(1)}
+                  </button>
+                ))}
+              </div>
+              <button
+                onClick={() => setShowNewGameModal(false)}
+                className="modal-button cancel"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+
       </div>
       );
     };
