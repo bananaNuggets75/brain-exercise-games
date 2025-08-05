@@ -278,9 +278,89 @@ const SlidingTilesPage: React.FC = () => {
 
 
 
-return (
-  <div></div>
-);
+  return (
+    <div className="sliding-tiles-container">
+      <div className="sliding-tiles-header">
+        <h1 className="sliding-tiles-title">SLIDING TILES</h1>
+        <p className="sliding-tiles-subtitle">Arrange the numbers in order</p>
+        
+        <div className="game-controls">
+          <div className="size-selector">
+            <label>Grid Size:</label>
+            <select 
+              value={gridSize} 
+              onChange={(e) => setGridSize(parseInt(e.target.value) as GridSize)}
+              disabled={isShuffling}
+            >
+              <option value={3}>3×3 (8‑puzzle)</option>
+              <option value={4}>4×4 (15‑puzzle)</option>
+              <option value={5}>5×5 (24‑puzzle)</option>
+            </select>
+          </div>
+          
+          <div className="game-info">
+            <span>Moves: {moves}</span>
+            <span>Time: {formatTime(elapsedTime)}</span>
+          </div>
+          
+          <div className="game-stats">
+            <span>Played: {stats.played}</span>
+            <span>Won: {stats.won}</span>
+            {stats.bestMoves !== null && <span>Best Moves: {stats.bestMoves}</span>}
+            {stats.bestTime !== null && <span>Best Time: {formatTime(stats.bestTime)}</span>}
+          </div>
+        </div>
+      </div>
+  
+      <div className="game-board">
+        {isShuffling ? (
+          <div className="shuffling-indicator">
+            <div className="shuffle-spinner"></div>
+            <p>Shuffling puzzle...</p>
+          </div>
+        ) : (
+          <div className={`tiles-grid grid-${gridSize}`}>
+            {grid.map((row, rowIndex) =>
+              row.map((value, colIndex) => (
+                <div
+                  key={`${rowIndex}-${colIndex}`}
+                  className={getTileClass(rowIndex, colIndex, value)}
+                  onClick={() => handleTileClick(rowIndex, colIndex)}
+                >
+                  {value !== null && <span className="tile-number">{value}</span>}
+                </div>
+              ))
+            )}
+          </div>
+        )}
+      </div>
+  
+      <div className="game-controls-bottom">
+        <div className="action-buttons">
+          <button
+            onClick={() => setShowNewGameModal(true)}
+            className="action-button new-game"
+            disabled={isShuffling}
+          >
+            🎮 New Game
+          </button>
+          
+          <button
+            onClick={startNewGame}
+            className="action-button shuffle"
+            disabled={isShuffling}
+          >
+            🔀 Shuffle
+          </button>
+        </div>
+        
+        <div className="hint-text">
+          Click tiles adjacent to the empty space to move them. Use arrow keys to move tiles into the empty space.
+        </div>
+      </div>
+      </div>
+  );
+  
 };
 
 export default SlidingTilesPage;
