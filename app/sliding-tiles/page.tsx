@@ -210,6 +210,42 @@ const SlidingTilesPage: React.FC = () => {
     }
   }, [gameStatus, isShuffling, moveTile, findEmptyPosition, isPuzzleSolved, moves, elapsedTime]);
 
+  // Handle keyboard input
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (gameStatus !== 'playing' || isShuffling) return;
+      
+      const { row, col } = emptyPos;
+      let targetRow = row;
+      let targetCol = col;
+      
+      switch (e.key) {
+        case 'ArrowUp':
+          targetRow = row + 1;
+          break;
+        case 'ArrowDown':
+          targetRow = row - 1;
+          break;
+        case 'ArrowLeft':
+          targetCol = col + 1;
+          break;
+        case 'ArrowRight':
+          targetCol = col - 1;
+          break;
+        default:
+          return;
+      }
+      
+      if (targetRow >= 0 && targetRow < gridSize && targetCol >= 0 && targetCol < gridSize) {
+        handleTileClick(targetRow, targetCol);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [gameStatus, isShuffling, emptyPos, gridSize, handleTileClick]);
+
+
   // Initialize game on mount and grid size change
   useEffect(() => {
     startNewGame();
