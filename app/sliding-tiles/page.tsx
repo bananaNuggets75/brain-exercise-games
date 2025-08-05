@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 type GridSize = 3 | 4 | 5;
 type TileValue = number | null;
 type GameGrid = TileValue[][];
-type Direction = 'up' | 'down' | 'left' | 'right';
+//type Direction = 'up' | 'down' | 'left' | 'right';
 
 interface GameStats {
   played: number;
@@ -119,7 +119,7 @@ const SlidingTilesPage: React.FC = () => {
 
   // Shuffle puzzle
   const shufflePuzzle = useCallback((grid: GameGrid, shuffleMoves: number = 1000): GameGrid => {
-    let currentGrid = grid.map(row => [...row]);
+    const currentGrid = grid.map(row => [...row]);
     let currentEmpty = findEmptyPosition(currentGrid);
     
     for (let i = 0; i < shuffleMoves; i++) {
