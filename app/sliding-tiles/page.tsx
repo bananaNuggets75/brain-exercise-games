@@ -265,9 +265,9 @@ const SlidingTilesPage: React.FC = () => {
       classes.push('empty');
     } else {
       classes.push('filled');
-      if (isValidMove(grid, row, col)) {
+      /* if (isValidMove(grid, row, col)) {
         classes.push('movable');
-      }
+      } */
       if (slidingTile?.row === row && slidingTile?.col === col) {
         classes.push('sliding');
       }
