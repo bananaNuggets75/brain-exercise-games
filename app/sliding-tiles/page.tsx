@@ -16,10 +16,10 @@ interface GameStats {
 interface Position {
   row: number;
   col: number;
-} 
+}
 
 const SlidingTilesPage: React.FC = () => {
-  // Game states
+  // Game state
   const [gridSize, setGridSize] = useState<GridSize>(4);
   const [grid, setGrid] = useState<GameGrid>([]);
   const [emptyPos, setEmptyPos] = useState<Position>({ row: 0, col: 0 });
@@ -31,7 +31,7 @@ const SlidingTilesPage: React.FC = () => {
   const [isShuffling, setIsShuffling] = useState<boolean>(false);
   const [showNewGameModal, setShowNewGameModal] = useState<boolean>(false);
   const [showWinModal, setShowWinModal] = useState<boolean>(false);
-  const [slidingTile, setSlidingTile] = useState<Position | null>(null); 
+  const [slidingTile, setSlidingTile] = useState<Position | null>(null);
 
   // Timer effect
   useEffect(() => {
@@ -276,8 +276,6 @@ const SlidingTilesPage: React.FC = () => {
     return classes.join(' ');
   };
 
-
-
   return (
     <div className="sliding-tiles-container">
       <div className="sliding-tiles-header">
@@ -289,12 +287,19 @@ const SlidingTilesPage: React.FC = () => {
             <label>Grid Size:</label>
             <select 
               value={gridSize} 
-              onChange={(e) => setGridSize(parseInt(e.target.value) as GridSize)}
+              onChange={(e) => {
+                const newSize = parseInt(e.target.value) as GridSize;
+                if (gameStatus === 'playing') {
+                  setGridSize(newSize);
+                } else {
+                  setGridSize(newSize);
+                }
+              }}
               disabled={isShuffling}
             >
-              <option value={3}>3×3 (8‑puzzle)</option>
-              <option value={4}>4×4 (15‑puzzle)</option>
-              <option value={5}>5×5 (24‑puzzle)</option>
+              <option value={3}>3×3 (8-puzzle)</option>
+              <option value={4}>4×4 (15-puzzle)</option>
+              <option value={5}>5×5 (24-puzzle)</option>
             </select>
           </div>
           
@@ -306,12 +311,12 @@ const SlidingTilesPage: React.FC = () => {
           <div className="game-stats">
             <span>Played: {stats.played}</span>
             <span>Won: {stats.won}</span>
-            {stats.bestMoves !== null && <span>Best Moves: {stats.bestMoves}</span>}
-            {stats.bestTime !== null && <span>Best Time: {formatTime(stats.bestTime)}</span>}
+            {stats.bestMoves && <span>Best Moves: {stats.bestMoves}</span>}
+            {stats.bestTime && <span>Best Time: {formatTime(stats.bestTime)}</span>}
           </div>
         </div>
       </div>
-  
+
       <div className="game-board">
         {isShuffling ? (
           <div className="shuffling-indicator">
@@ -327,14 +332,14 @@ const SlidingTilesPage: React.FC = () => {
                   className={getTileClass(rowIndex, colIndex, value)}
                   onClick={() => handleTileClick(rowIndex, colIndex)}
                 >
-                  {value !== null && <span className="tile-number">{value}</span>}
+                  {value && <span className="tile-number">{value}</span>}
                 </div>
               ))
             )}
           </div>
         )}
       </div>
-  
+
       <div className="game-controls-bottom">
         <div className="action-buttons">
           <button
@@ -358,38 +363,80 @@ const SlidingTilesPage: React.FC = () => {
           Click tiles adjacent to the empty space to move them. Use arrow keys to move tiles into the empty space.
         </div>
       </div>
+
+      {gameStatus === 'won' && (
+        <div className="status-message status-won">
+          <div className="status-title">🎉 Congratulations!</div>
+          <div className="status-text">
+            Puzzle solved in {moves} moves and {formatTime(elapsedTime)}!
+          </div>
+        </div>
+      )}
+
+      {/* New Game Modal */}
       {showNewGameModal && (
-      <div className="modal-overlay">
-        <div className="modal">
-          <h3>Start New Game</h3>
-          <p>Select grid size for a new puzzle:</p>
-          <div className="size-options">
-            {([3, 4, 5] as GridSize[]).map(size => (
+        <div className="modal-overlay">
+          <div className="modal">
+            <h3>Start New Game</h3>
+            <p>Select grid size for a new puzzle:</p>
+            <div className="size-options">
+              {([3, 4, 5] as GridSize[]).map(size => (
+                <button
+                  key={size}
+                  onClick={() => {
+                    setGridSize(size);
+                    setShowNewGameModal(false);
+                    startNewGame();
+                  }}
+                  className="modal-button confirm"
+                >
+                  {size}×{size} ({size === 3 ? '8' : size === 4 ? '15' : '24'}-puzzle)
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => setShowNewGameModal(false)}
+              className="modal-button cancel"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Win Modal */}
+      {showWinModal && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <h3>🎉 Puzzle Solved!</h3>
+            <div className="win-stats">
+              <p>Moves: <strong>{moves}</strong></p>
+              <p>Time: <strong>{formatTime(elapsedTime)}</strong></p>
+              {stats.bestMoves === moves && <p className="record">🏆 New best moves record!</p>}
+              {stats.bestTime === elapsedTime && <p className="record">🏆 New best time record!</p>}
+            </div>
+            <div className="modal-buttons">
               <button
-                key={size}
                 onClick={() => {
-                  setGridSize(size);
-                  setShowNewGameModal(false);
+                  setShowWinModal(false);
                   startNewGame();
                 }}
                 className="modal-button confirm"
               >
-                {size}×{size} ({size === 3 ? '8' : size === 4 ? '15' : '24'}‑puzzle)
+                Play Again
               </button>
-            ))}
+              <button
+                onClick={() => setShowWinModal(false)}
+                className="modal-button cancel"
+              >
+                Close
+              </button>
+            </div>
           </div>
-          <button
-            onClick={() => setShowNewGameModal(false)}
-            className="modal-button cancel"
-          >
-            Cancel
-          </button>
         </div>
-      </div>
-    )}
+      )}
     </div>
   );
-  
 };
 
 export default SlidingTilesPage;
