@@ -18,7 +18,7 @@ interface GameStats {
 }
 
 // to do: do not enter if it is not a word (random letters)
-// store the game stats
+// store the game stats (maybe in JSON)
 // get a library of words from an API or a file
 
 type GameStatus = 'playing' | 'won' | 'lost';
