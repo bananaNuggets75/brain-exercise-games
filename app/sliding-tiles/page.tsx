@@ -1,7 +1,7 @@
 'use client';
-//import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
-/* type GridSize = 3 | 4 | 5;
+type GridSize = 3 | 4 | 5;
 type TileValue = number | null;
 type GameGrid = TileValue[][];
 type Direction = 'up' | 'down' | 'left' | 'right';
@@ -16,12 +16,13 @@ interface GameStats {
 interface Position {
   row: number;
   col: number;
-} */
+} 
 
 const SlidingTilesPage: React.FC = () => {
-  //const [gridSize, setGridSize] = useState<GridSize>(4);
-  //const [grid, setGrid] = useState<GameGrid>([]);
-  /* const [emptyPos, setEmptyPos] = useState<Position>({ row: 0, col: 0 });
+  // Game states
+  const [gridSize, setGridSize] = useState<GridSize>(4);
+  const [grid, setGrid] = useState<GameGrid>([]);
+  const [emptyPos, setEmptyPos] = useState<Position>({ row: 0, col: 0 });
   const [gameStatus, setGameStatus] = useState<'playing' | 'won'>('playing');
   const [moves, setMoves] = useState<number>(0);
   const [startTime, setStartTime] = useState<number>(Date.now());
@@ -30,7 +31,18 @@ const SlidingTilesPage: React.FC = () => {
   const [isShuffling, setIsShuffling] = useState<boolean>(false);
   const [showNewGameModal, setShowNewGameModal] = useState<boolean>(false);
   const [showWinModal, setShowWinModal] = useState<boolean>(false);
-  const [slidingTile, setSlidingTile] = useState<Position | null>(null); */
+  const [slidingTile, setSlidingTile] = useState<Position | null>(null); 
+
+  // Timer effect
+  useEffect(() => {
+    if (gameStatus === 'playing') {
+      const interval = setInterval(() => {
+        setElapsedTime(Date.now() - startTime);
+      }, 1000);
+      return () => clearInterval(interval);
+    }
+  }, [gameStatus, startTime]);
+
 
 return (
   <div></div>
