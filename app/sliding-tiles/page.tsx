@@ -358,7 +358,36 @@ const SlidingTilesPage: React.FC = () => {
           Click tiles adjacent to the empty space to move them. Use arrow keys to move tiles into the empty space.
         </div>
       </div>
+      {showNewGameModal && (
+      <div className="modal-overlay">
+        <div className="modal">
+          <h3>Start New Game</h3>
+          <p>Select grid size for a new puzzle:</p>
+          <div className="size-options">
+            {([3, 4, 5] as GridSize[]).map(size => (
+              <button
+                key={size}
+                onClick={() => {
+                  setGridSize(size);
+                  setShowNewGameModal(false);
+                  startNewGame();
+                }}
+                className="modal-button confirm"
+              >
+                {size}×{size} ({size === 3 ? '8' : size === 4 ? '15' : '24'}‑puzzle)
+              </button>
+            ))}
+          </div>
+          <button
+            onClick={() => setShowNewGameModal(false)}
+            className="modal-button cancel"
+          >
+            Cancel
+          </button>
+        </div>
       </div>
+    )}
+    </div>
   );
   
 };
