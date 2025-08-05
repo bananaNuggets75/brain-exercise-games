@@ -155,6 +155,38 @@ const SlidingTilesPage: React.FC = () => {
     return currentGrid;
   }, [gridSize, findEmptyPosition]);
 
+  // Start new game
+  const startNewGame = useCallback(async () => {
+    setIsShuffling(true);
+    setGameStatus('playing');
+    setMoves(0);
+    setStartTime(Date.now());
+    setElapsedTime(0);
+    setSlidingTile(null);
+    
+    const solvedGrid = createSolvedGrid(gridSize);
+    
+    // Small delay to show shuffling state
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    const shuffledGrid = shufflePuzzle(solvedGrid);
+    
+    // Ensure the puzzle isn't already solved after shuffling
+    let finalGrid = shuffledGrid;
+    while (isPuzzleSolved(finalGrid)) {
+      finalGrid = shufflePuzzle(solvedGrid);
+    }
+    
+    setGrid(finalGrid);
+    setEmptyPos(findEmptyPosition(finalGrid));
+    setIsShuffling(false);
+  }, [gridSize, createSolvedGrid, shufflePuzzle, isPuzzleSolved, findEmptyPosition]);
+
+  // Initialize game on mount and grid size change
+  useEffect(() => {
+    startNewGame();
+  }, [startNewGame]);
+
 
 
 return (
