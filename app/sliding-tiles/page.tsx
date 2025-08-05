@@ -182,6 +182,34 @@ const SlidingTilesPage: React.FC = () => {
     setIsShuffling(false);
   }, [gridSize, createSolvedGrid, shufflePuzzle, isPuzzleSolved, findEmptyPosition]);
 
+  // Handle tile click
+  const handleTileClick = useCallback((row: number, col: number) => {
+    if (gameStatus !== 'playing' || isShuffling) return;
+    
+    const newGrid = moveTile(row, col);
+    if (newGrid) {
+      setSlidingTile({ row, col });
+      setTimeout(() => setSlidingTile(null), 200);
+      
+      setGrid(newGrid);
+      setEmptyPos(findEmptyPosition(newGrid));
+      setMoves(prev => prev + 1);
+      
+      // Check if puzzle is solved
+      if (isPuzzleSolved(newGrid)) {
+        setGameStatus('won');
+        const timeElapsed = elapsedTime;
+        setStats(prev => ({
+          played: prev.played + 1,
+          won: prev.won + 1,
+          bestMoves: prev.bestMoves === null ? moves + 1 : Math.min(prev.bestMoves, moves + 1),
+          bestTime: prev.bestTime === null ? timeElapsed : Math.min(prev.bestTime, timeElapsed)
+        }));
+        setShowWinModal(true);
+      }
+    }
+  }, [gameStatus, isShuffling, moveTile, findEmptyPosition, isPuzzleSolved, moves, elapsedTime]);
+
   // Initialize game on mount and grid size change
   useEffect(() => {
     startNewGame();
