@@ -245,11 +245,36 @@ const SlidingTilesPage: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [gameStatus, isShuffling, emptyPos, gridSize, handleTileClick]);
 
-
   // Initialize game on mount and grid size change
   useEffect(() => {
     startNewGame();
   }, [startNewGame]);
+
+  // Format time
+  const formatTime = (ms: number): string => {
+    const seconds = Math.floor(ms / 1000);
+    const minutes = Math.floor(seconds / 60);
+    return `${minutes}:${(seconds % 60).toString().padStart(2, '0')}`;
+  };
+
+  // Get tile class
+  const getTileClass = (row: number, col: number, value: TileValue): string => {
+    const classes = ['tile'];
+    
+    if (value === null) {
+      classes.push('empty');
+    } else {
+      classes.push('filled');
+      if (isValidMove(grid, row, col)) {
+        classes.push('movable');
+      }
+      if (slidingTile?.row === row && slidingTile?.col === col) {
+        classes.push('sliding');
+      }
+    }
+    
+    return classes.join(' ');
+  };
 
 
 
