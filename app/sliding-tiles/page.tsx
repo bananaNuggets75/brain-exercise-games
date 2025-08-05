@@ -117,6 +117,45 @@ const SlidingTilesPage: React.FC = () => {
     return newGrid;
   }, [grid, isValidMove, findEmptyPosition]);
 
+  // Shuffle puzzle
+  const shufflePuzzle = useCallback((grid: GameGrid, shuffleMoves: number = 1000): GameGrid => {
+    let currentGrid = grid.map(row => [...row]);
+    let currentEmpty = findEmptyPosition(currentGrid);
+    
+    for (let i = 0; i < shuffleMoves; i++) {
+      const possibleMoves: Position[] = [];
+      
+      // Find all valid moves
+      const directions = [
+        { row: -1, col: 0 }, // up
+        { row: 1, col: 0 },  // down
+        { row: 0, col: -1 }, // left
+        { row: 0, col: 1 }   // right
+      ];
+      
+      directions.forEach(({ row: dRow, col: dCol }) => {
+        const newRow = currentEmpty.row + dRow;
+        const newCol = currentEmpty.col + dCol;
+        
+        if (newRow >= 0 && newRow < gridSize && newCol >= 0 && newCol < gridSize) {
+          possibleMoves.push({ row: newRow, col: newCol });
+        }
+      });
+      
+      if (possibleMoves.length > 0) {
+        const randomMove = possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
+        
+        // Swap
+        currentGrid[currentEmpty.row][currentEmpty.col] = currentGrid[randomMove.row][randomMove.col];
+        currentGrid[randomMove.row][randomMove.col] = null;
+        currentEmpty = randomMove;
+      }
+    }
+    
+    return currentGrid;
+  }, [gridSize, findEmptyPosition]);
+
+
 
 return (
   <div></div>
