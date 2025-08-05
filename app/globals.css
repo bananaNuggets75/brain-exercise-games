@@ -918,3 +918,123 @@ a {
   background: #b91c1c;
 }
 
+.hint-text {
+  text-align: center;
+  color: #9ca3af;
+  font-size: 0.875rem;
+  max-width: 400px;
+}
+
+.status-message {
+  text-align: center;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  backdrop-filter: blur(8px);
+  margin-top: 1rem;
+}
+
+.status-won {
+  background: rgba(16, 185, 129, 0.2);
+  border: 1px solid #10b981;
+}
+
+.status-won .status-title {
+  color: #34d399;
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.status-won .status-text {
+  color: #a7f3d0;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal {
+  background: #1e293b;
+  padding: 2rem;
+  border-radius: 0.75rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  border: 1px solid #334155;
+  max-width: 500px;
+  text-align: center;
+}
+
+.modal h3 {
+  color: white;
+  margin-bottom: 1rem;
+  font-size: 1.25rem;
+}
+
+.modal p {
+  color: #d1d5db;
+  margin-bottom: 1.5rem;
+}
+
+.size-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.win-stats {
+  margin-bottom: 1.5rem;
+}
+
+.win-stats p {
+  margin-bottom: 0.5rem;
+  color: #d1d5db;
+}
+
+.win-stats .record {
+  color: #fbbf24;
+  font-weight: bold;
+}
+
+.modal-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.modal-button {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex: 1;
+  max-width: 150px;
+}
+
+.modal-button.confirm {
+  background: #059669;
+  color: white;
+}
+
+.modal-button.confirm:hover {
+  background: #047857;
+}
+
+.modal-button.cancel {
+  background: #6b7280;
+  color: white;
+}
+
+.modal-button.cancel:hover {
+  background: #4b5563;
+}
+
