@@ -23,9 +23,19 @@ const FeedbackPage = () => {
       return;
     }
 
+    console.log('Feedback submitted:', formData);
+
+    toast.success('Feedback submitted! Thank you.');
+    setFormData({
+      name: '',
+      email: '',
+      type: 'suggestion',
+      message: '',
+    });
+  };
+
     return (
         <div></div>
     );
-  }
 };
 export default FeedbackPage;
