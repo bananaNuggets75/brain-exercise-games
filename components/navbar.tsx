@@ -22,6 +22,9 @@ export default function Navbar() {
             <li>
               <Link href="/human-benchmark">Human Benchmark</Link>
             </li>
+            <li>
+              <Link href="/feedback">Feedback</Link>
+            </li>
           </ul>
         </div>
       </nav>
