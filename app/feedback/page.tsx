@@ -36,53 +36,57 @@ const FeedbackPage = () => {
   };
 
   return (
-    <div className="max-w-xl mx-auto p-6 mt-10 bg-white rounded-2xl shadow-lg">
-      <h1 className="text-2xl font-bold mb-4 text-center">Leave Feedback</h1>
-      <p className="text-sm text-gray-600 mb-6 text-center">Let us know how we can improve or report a bug.</p>
+    <div className="feedback-container">
+      <div className="feedback-header">
+        <h1 className="feedback-title">Leave Feedback</h1>
+        <p className="feedback-subtitle">Let us know how we can improve or report a bug.</p>
+      </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <input
-          name="name"
-          type="text"
-          placeholder="Your Name"
-          value={formData.name}
-          onChange={handleChange}
-          className="w-full p-3 border rounded-xl focus:outline-none focus:ring"
-        />
-        <input
-          name="email"
-          type="email"
-          placeholder="Your Email"
-          value={formData.email}
-          onChange={handleChange}
-          className="w-full p-3 border rounded-xl focus:outline-none focus:ring"
-        />
-        <select
-          name="type"
-          value={formData.type}
-          onChange={handleChange}
-          className="w-full p-3 border rounded-xl focus:outline-none focus:ring"
-        >
-          <option value="suggestion">Suggestion</option>
-          <option value="bug">Report a Bug</option>
-          <option value="improvement">Improvement</option>
-        </select>
-        <textarea
-          name="message"
-          placeholder="Write your feedback here..."
-          rows={5}
-          value={formData.message}
-          onChange={handleChange}
-          className="w-full p-3 border rounded-xl focus:outline-none focus:ring resize-none"
-        />
+      <div className="feedback-card">
+        <form onSubmit={handleSubmit} className="feedback-form">
+          <input
+            name="name"
+            type="text"
+            placeholder="Your Name"
+            value={formData.name}
+            onChange={handleChange}
+            className="form-input"
+          />
+          <input
+            name="email"
+            type="email"
+            placeholder="Your Email"
+            value={formData.email}
+            onChange={handleChange}
+            className="form-input"
+          />
+          <select
+            name="type"
+            value={formData.type}
+            onChange={handleChange}
+            className="form-select"
+          >
+            <option value="suggestion">Suggestion</option>
+            <option value="bug">Report a Bug</option>
+            <option value="improvement">Improvement</option>
+          </select>
+          <textarea
+            name="message"
+            placeholder="Write your feedback here..."
+            rows={5}
+            value={formData.message}
+            onChange={handleChange}
+            className="form-textarea"
+          />
 
-        <button
-          type="submit"
-          className="w-full bg-blue-600 text-white font-medium py-3 rounded-xl hover:bg-blue-700 transition"
-        >
-          Submit Feedback
-        </button>
-      </form>
+          <button
+            type="submit"
+            className="submit-button"
+          >
+            Submit Feedback
+          </button>
+        </form>
+      </div>
     </div>
   );
 };
