@@ -1270,3 +1270,40 @@ a {
   margin-bottom: 1rem;
   text-align: center;
 }
+
+/* Dark mode for feedback page */
+@media (prefers-color-scheme: dark) {
+  .feedback-container {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+  }
+
+  .feedback-card {
+    background: var(--gray-800);
+    border-color: var(--gray-700);
+  }
+
+  .feedback-title {
+    color: white;
+  }
+
+  .feedback-subtitle {
+    color: var(--gray-400);
+  }
+
+  .form-label {
+    color: var(--gray-300);
+  }
+
+  .form-input,
+  .form-select,
+  .form-textarea {
+    background: var(--gray-700);
+    border-color: var(--gray-600);
+    color: white;
+  }
+
+  .form-input::placeholder,
+  .form-textarea::placeholder {
+    color: var(--gray-400);
+  }
+}
