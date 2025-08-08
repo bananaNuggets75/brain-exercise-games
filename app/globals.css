@@ -1307,3 +1307,27 @@ a {
     color: var(--gray-400);
   }
 }
+
+/* Mobile responsiveness for feedback page */
+@media (max-width: 640px) {
+  .feedback-card {
+    padding: 1.5rem;
+    margin-top: 1rem;
+    border-radius: 0.75rem;
+  }
+
+  .feedback-title {
+    font-size: 1.75rem;
+  }
+
+  .feedback-subtitle {
+    font-size: 0.8rem;
+  }
+
+  .form-input,
+  .form-select,
+  .form-textarea,
+  .submit-button {
+    font-size: 0.9rem;
+  }
+}
